@@ -110,6 +110,8 @@ We will attempt to use [SemVer](http://semver.org/) for versioning. For the vers
 * **PhaseWalker18** - *Beer Consumption, code defecation*
 * **DisruptorMon** - *Slave Driving, cheap beer supply, testing* 
 
+If you are feeling especially thankful for this entering your life, please feel free to send donations to this BTC address: 1BPQvQjcAGuMjBnG25wuoD64i7KmWZRrpnN
+
 See also the list of contributors
 
 ## License
