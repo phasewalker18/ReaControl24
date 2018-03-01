@@ -10,7 +10,7 @@ Some basic stateful mode handling is provided to receive text from the DAW and d
 
 ## Getting Started
 
-Copy the files to your system in a reasonable spot where you will be able to run the python programs and log files can be created.
+Copy the files to your system in a reasonable spot (your REAPER Scripts directory for example) where you will be able to run the python programs and log files can be created.
 For a quick start, if your DAW and Control24 are on the same LAN, and you intend to run this middleware on your DAW PC:
 
 Copy the provided Reaper.OSC file into the correct directory on your system for such files. You will find a convenient button in the reaper dialogs to find this for you when configuring the csurf plugin.
@@ -54,11 +54,6 @@ pip install -r requirements.txt --user
 
 By default all log outputs will be created into a subdirectory below wherever you install the files, so choose somewhere that this can happen without issues
 
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Usage
 
@@ -72,6 +67,7 @@ All this can be changed by use of command line parameters. Use the --help switch
 python control24d.py --help
 ```
 
+The repo was developed for OSX but in theory, being python, should be portable to other platforms. Please test and report your results.
 
 ## Running the tests
 
@@ -80,7 +76,7 @@ By way of an apology, may this bring levity to your day
 
 ### Coding standards
 
-50% NOOB, 50% IDIOT. Any contributors should feel free to laugh and point, as long as the criticism can be usefully applied.
+50% NOOB, 49% IDIOT, 1% Beer driven lunacy. Any contributors should feel free to laugh and point, as long as the criticism can be usefully applied.
 
 ## Deployment
 
@@ -88,9 +84,9 @@ The daemon process MUST be on a host with an interface in the same LAN segment a
 
 ## Customisation
 
-A starting Reaper.OSC file is provided with some basic mappings to the OSC address schema. Feel free to add to this as required by your preferences or any new good mappings. Please share anything that proves useful.
+A starting Reaper.OSC file is provided with some basic mappings to the OSC address schema. Feel free to add to this as required by your preferences or any new good mappings. Please share (by commit to this repo) anything that proves useful.
 The schema is determined by the control24map.py file, each 'address' attribute being appended to the path for the relevante control.
-Use the attribute 'CmdClass' to identify the python class that will define the handler for the control.
+Use the attribute 'CmdClass' to identify the python class that will define the handler for the control. In this way you can implement more complex logic in a python class over and above the 'duh send this address' default.
 Other attributes determine how the tree is 'walked' according to the binary received from the desk. Byte numbers are zero origin, the first denotes the actual command:
     ChildByte       which byte to look up to find the next child
     ChildByteMask   apply this 8 bit mask before lookup
@@ -103,7 +99,7 @@ Other attributes determine how the tree is 'walked' according to the binary rece
 ## Contributing
 
 This is freeware, non warranty, non commercial code to benefit the hungry children and hungrier DAW users of the world. If you pull and don't contribute, you should feel bad. Real bad. 
-Please develop here in this repo for the benefit of all. All pull and merge requests will be accepted and best efforts made to make sense of it all. 
+Please develop here in this repo for the benefit of all. All pull and merge requests will be accepted and best efforts made to make sense of it all when merging.
 
 ## Versioning
 
@@ -111,8 +107,8 @@ We will attempt to use [SemVer](http://semver.org/) for versioning. For the vers
 
 ## Authors
 
-* **PhaseWalker** - *Beer Consumption, code defecation*
-* **MasterBastardio** - *Slave Driving, cheap beer supply, testing* 
+* **PhaseWalker18** - *Beer Consumption, code defecation*
+* **DisruptorMon** - *Slave Driving, cheap beer supply, testing* 
 
 See also the list of contributors
 
