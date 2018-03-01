@@ -41,6 +41,12 @@ pypcap
 OSC capable DAW such as Reaper 5.x
 ```
 
+Also, the winpcapy library (re-distributed here for now, until a repostiory is found):
+
+```
+winpcapy.py, Authored by (c) Massimo Ciani 2009
+```
+
 ### Installing
 
 You will need super user privileges to use this software, as it uses PCAP to establish network connectivity with the Control24 ethernet interface. All other TCP and UDP traffic is ignored/filtered out, so you should not have any privacy concerns if the source has not been tampered with.
