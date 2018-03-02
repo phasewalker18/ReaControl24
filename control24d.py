@@ -82,9 +82,7 @@ PCAP_SNAPLEN = 1038
 PCAP_PROMISC = 1
 PCAP_PACKET_LIMIT = -1  # infinite
 PCAP_POLL_DELAY = 5
-#PCAP filter can be adjusted here. The first form can cause problems in linux
-#PCAP_FILTER = '(ether dst %s or broadcast) and ether[12:2]=0x885f'
-PCAP_FILTER = 'ether[12:2]=0x885f'
+PCAP_FILTER = '(ether dst %s or broadcast) and ether[12:2]=0x885f'
 
 # END Globals
 
@@ -389,7 +387,7 @@ class C24session(object):
         compiled = False
         tries = 0
         while tries < 15 and not compiled:
-            filtstr = PCAP_FILTER #% self.mac_computer_str
+            filtstr = PCAP_FILTER % self.mac_computer_str
             filt = (c_char * len(filtstr))()
             filt.value = filtstr
             LOG.debug('PCAP filter: %s', filt.value)
