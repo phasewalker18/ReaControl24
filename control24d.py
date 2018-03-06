@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 from ctypes import (POINTER, Union, BigEndianStructure, Structure, c_char,PC
-                    c_int, c_ubyte, c_uint16, c_uint32, cast, create_string_buffer,
+                    c_int, c_ubyte, c_uint16, c_uint32, cast, create_string_buffer
                     )
 from multiprocessing.connection import AuthenticationError, Listener
 
