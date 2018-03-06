@@ -783,7 +783,7 @@ def main():
     (opts, args) = oprs.parse_args()
 
     # Set up Interrupt signal handler so daemon can close cleanly
-    for sig in [signal.SIGINT, signal.SIGHUP]:
+    for sig in [signal.SIGINT]:
         signal.signal(sig, signal_handler)
 
     # Build the C24Session
