@@ -8,7 +8,7 @@ import signal
 import sys
 import threading
 import time
-from ctypes import (POINTER, Union, BigEndianStructure, Structure, c_char,
+from ctypes import (POINTER, Union, BigEndianStructure, Structure, c_char,PC
                     c_int, c_ubyte, c_uint16, c_uint32, cast, create_string_buffer,
                     )
 from multiprocessing.connection import AuthenticationError, Listener
@@ -388,7 +388,8 @@ class C24session(object):
         tries = 0
         while tries < 15 and not compiled:
             filtstr = PCAP_FILTER % self.mac_computer_str
-            filt = (c_char * len(filtstr))()
+            strlen = len(filtstr)+1
+            filt = (c_char * strlen)()
             filt.value = filtstr
             LOG.debug('PCAP filter: %s', filt.value)
             compile_result = winpcapy.pcap_compile(self.pcap_sess, prog, filt, opt,
