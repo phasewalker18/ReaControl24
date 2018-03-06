@@ -53,6 +53,7 @@ Although ReaControl24 is written in python, it depends on certain libraries like
 
 
 |Platform|control24d|control24osc|
+|---|---|---|
 |macos 10.13.x|Full|Full|
 |macos < 10.13|OK in theory|OK in theory|
 |Rasbpian ?|Full|Full|
