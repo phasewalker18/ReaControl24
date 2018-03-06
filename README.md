@@ -33,7 +33,7 @@ python control24osc.py
 ### Prerequisites
 
 ```
-Python 2.x
+Python 2.7.x
 netifaces
 pyOSC
 pypcap
@@ -46,6 +46,26 @@ Also, the winpcapy library (re-distributed here for now, until a repostiory is f
 ```
 winpcapy.py, Authored by (c) Massimo Ciani 2009
 ```
+
+### Compatibility
+
+Although ReaControl24 is written in python, it depends on certain libraries like pypcap, that are usually wrappers around C libraries. These can vary from platform to platform. Testing of various platforms is ongoing, status at this time is:
+
+```
+Platform        control24d      control24osc
+
+macos 10.13.x   Full            Full
+macos < 10.13   OK in theory    OK in theory
+
+Rasbpian ?        Full            Full
+
+Other Linux     OK in theory    OK in theory
+
+Windows 10      No, PCAP issues Full
+Window 7,8      OK in theory    OK in theory
+
+```
+
 
 ### Installing
 
