@@ -8,6 +8,30 @@ It will translate between the binary protocol of the desk and OSC messages to ex
 
 Some basic stateful mode handling is provided to receive text from the DAW and display it on the scribble strips, and deal with issues like fader command echos.
 
+### Installing - OSX, macos, Linux
+
+You will need super user privileges to use this software, as it uses libpcap packet capture library to establish network connectivity with the Control24 ethernet interface. All other TCP and UDP traffic is ignored/filtered out, so you should not have any privacy concerns if the source has not been tampered with.
+Ensure the current or default python environment has a 2.x interpreter in the current path, and install the pre-requisites into user environment using pip or similar
+
+Example pip install
+
+```
+pip install -r requirements.txt --user
+```
+
+By default all log outputs will be created into a subdirectory below wherever you install the files, so choose somewhere that this can happen without issues
+
+### Installing - Windows 10
+
+The installation process for Windows is quite a lot more involved, as the OS does not come supplied with several requirements:
+
+Download and install the following Windows programs:
+
+* Python 2.7.x
+* NPCAP
+* TODO - copy in the proper instructions
+
+
 ## Getting Started
 
 Copy the files to your system in a reasonable spot (your REAPER Scripts directory for example) where you will be able to run the python programs and log files can be created.
@@ -41,7 +65,11 @@ pypcap
 OSC capable DAW such as Reaper 5.x
 ```
 
+Also, the winpcapy library (re-distributed here for now, until a repostiory is found):
 
+```
+winpcapy.py, Authored by (c) Massimo Ciani 2009
+```
 
 ### Compatibility
 
@@ -54,23 +82,7 @@ Although ReaControl24 is written in python, it depends on certain libraries like
 |macos < 10.13|OK in theory|OK in theory|
 |Rasbpian ?|Full|Full|
 |Other Linux|OK in theory|OK in theory|
-|Windows 10|No, PCAP issues|Full|
-
-
-
-
-### Installing
-
-You will need super user privileges to use this software, as it uses PCAP to establish network connectivity with the Control24 ethernet interface. All other TCP and UDP traffic is ignored/filtered out, so you should not have any privacy concerns if the source has not been tampered with.
-Ensure the current or default python environment has a 2.x interpreter in the current path, and install the pre-requisites into user environment using pip or similar
-
-Example pip install
-
-```
-pip install -r requirements.txt --user
-```
-
-By default all log outputs will be created into a subdirectory below wherever you install the files, so choose somewhere that this can happen without issues
+|Windows 10|In Progress (DEV_Compatibility branch)|Full|
 
 
 ## Usage
@@ -140,5 +152,4 @@ All other intellectual property rights remain with the original owners.
 ## Acknowledgments
 
 * **2mmi** - *Initial Idea, inspiration and saviour of us all
-* **Massimo Ciani** - winpcapy.py Author (c)2009
-```
+
