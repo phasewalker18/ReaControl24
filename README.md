@@ -41,11 +41,7 @@ pypcap
 OSC capable DAW such as Reaper 5.x
 ```
 
-Also, the winpcapy library (re-distributed here for now, until a repostiory is found):
 
-```
-winpcapy.py, Authored by (c) Massimo Ciani 2009
-```
 
 ### Compatibility
 
@@ -144,4 +140,5 @@ All other intellectual property rights remain with the original owners.
 ## Acknowledgments
 
 * **2mmi** - *Initial Idea, inspiration and saviour of us all
-
+* **Massimo Ciani** - winpcapy.py Author (c)2009
+```
