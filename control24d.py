@@ -741,7 +741,7 @@ def main():
     global LOG
 
     # See if this system has simple defaults we can use
-    default_iface, default_ip = ('0.0.0.0', 9123)
+    default_iface, default_ip = DEFAULTS.get('ip'), DEFAULTS.get('daemon')
 
     # program options
     oprs = opts_common("control24d Communication Daemon")
