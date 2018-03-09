@@ -8,9 +8,9 @@ import signal
 import sys
 import threading
 import time
-from ctypes import (POINTER, Union, BigEndianStructure, Structure, c_char,PC
-                    c_int, c_ubyte, c_uint16, c_uint32, cast, create_string_buffer
-                    )
+from ctypes import (POINTER, Union, BigEndianStructure, Structure, c_char, byref, c_long,
+                    c_int, c_ubyte, c_uint16, c_uint32, cast, create_string_buffer, CFUNCTYPE,
+                    addressof, string_at)
 from multiprocessing.connection import AuthenticationError, Listener
 
 import netifaces
@@ -19,13 +19,14 @@ from control24common import (
     start_logging,
     tick,
     DEFAULTS,
-    ipv4,
     opts_common,
     format_ip,
-    hexl
+    hexl,
+    list_networks
 )
 
-from dist import winpcapy
+import pcap
+#from dist import winpcapy
 
 '''
     This file is part of ReaControl24. Control Surface Middleware.
@@ -70,19 +71,16 @@ ECHOCMDS = [0xB0, 0x90, 0xF0]
 LOG = None
 SESSION = None
 ACK = None
-PHAND = winpcapy.CFUNCTYPE(
-    None,
-    winpcapy.POINTER(c_ubyte),
-    winpcapy.POINTER(winpcapy.pcap_pkthdr),
-    winpcapy.POINTER(c_ubyte)
-    )
+
 
 # PCAP settings
+PCAP_ERRBUF_SIZE = 256 
 PCAP_SNAPLEN = 1038
 PCAP_PROMISC = 1
 PCAP_PACKET_LIMIT = -1  # infinite
 PCAP_POLL_DELAY = 5
 PCAP_FILTER = '(ether dst %s or broadcast) and ether[12:2]=0x885f'
+#PCAP_FILTER = 'broadcast'
 
 # END Globals
 
@@ -112,11 +110,34 @@ def ctype_bytearray_from_literal(hexstring):
     return cobj
 
 
+def get_computer_mac(iface):
+    """Obtain the current computer's MAC address given the interface name"""
+    global LOG
+    network_addresses = netifaces.ifaddresses(iface)[netifaces.AF_LINK]
+    if not network_addresses:
+        LOG.error("Could not find Computer MAC Address")
+        sys.exit(1)
+    else:
+        mac_str = network_addresses[0]['addr']
+        mac_list = MacAddress.from_buffer_copy(
+            bytearray.fromhex(mac_str.replace(':', '')))
+        LOG.debug("Computer MAC Address %s", mac_str)
+        return mac_str, mac_list
+
+
+def convert_to_ctype(packet_byte_list):
+    """convert a packet string into the C language byte array type needed for pcap send"""
+    listlen = len(packet_byte_list)
+    ret = (c_ubyte * listlen)()
+    for ind, byt in enumerate(packet_byte_list):
+        ret[ind] = byt
+    return ret
+
 def find_interface(name, errbuf):
     """Check the interface with name exists, return the interface"""
-    alldevs = winpcapy.POINTER(winpcapy.pcap_if_t)()
+    alldevs = POINTER(pcap.pcap_if_t)()
     # Retrieve the device list on the local machine
-    if winpcapy.pcap_findalldevs(winpcapy.byref(alldevs), errbuf) == -1:
+    if pcap.pcap_findalldevs(byref(alldevs), errbuf) == -1:
         raise KeyError(
             "Error locating interfaces. Are you running me with SUDO? " +
             "Error from pcap_findalldevs: %s\n"
@@ -145,31 +166,6 @@ def find_interface(name, errbuf):
     else:
         raise KeyError("Can't find specified interface: %s\n" % name)
 
-
-def get_computer_mac(iface):
-    """Obtain the current computer's MAC address given the interface name"""
-    global LOG
-    network_addresses = netifaces.ifaddresses(iface)[netifaces.AF_LINK]
-    if not network_addresses:
-        LOG.error("Could not find Computer MAC Address")
-        sys.exit(1)
-    else:
-        mac_str = network_addresses[0]['addr']
-        mac_list = MacAddress.from_buffer_copy(
-            bytearray.fromhex(mac_str.replace(':', '')))
-        LOG.debug("Computer MAC Address %s", mac_str)
-        return mac_str, mac_list
-
-
-def convert_to_ctype(packet_byte_list):
-    """convert a packet string into the C language byte array type needed for pcap send"""
-    listlen = len(packet_byte_list)
-    ret = (c_ubyte * listlen)()
-    for ind, byt in enumerate(packet_byte_list):
-        ret[ind] = byt
-    return ret
-
-
 # END functions
 
 # START classes
@@ -196,7 +192,16 @@ def pcap_packetr_tostring(pcp):
     return msg
 
 
+class TimeVal(Structure):
+    _fields_ = [('tv_sec', c_long),
+                ('tv_usec', c_long)]
 
+class PcapHeader(Structure):
+    """ctypes structure to contain the pcap header
+    fields"""
+    _fields_ = [('ts', TimeVal),
+                ('caplen', c_int),
+                ('len', c_int)]
 
 
 class MacAddress(Structure):
@@ -371,45 +376,32 @@ class C24session(object):
     def _start_pcap_loop(self):
         """PCAP capture loop: designate the handler function,
         open the session and start the capture loop"""
-        packet_handler = PHAND(self._packet_handler)
-        self.pcap_sess = winpcapy.pcap_open_live(
-            self.network,
-            PCAP_SNAPLEN,
-            PCAP_PROMISC,
-            PCAP_POLL_DELAY,
-            self.pcap_error_buffer
-            )
-        prog = winpcapy.bpf_program()
-
-        opt = c_int(1)
-        mask = 0xFFFFFFFF  # net mask 255.255.255.255
-        self.is_capturing = False
-        compiled = False
-        tries = 0
-        while tries < 15 and not compiled:
-            filtstr = PCAP_FILTER % self.mac_computer_str
-            strlen = len(filtstr)+1
-            filt = (c_char * strlen)()
-            filt.value = filtstr
-            LOG.debug('PCAP filter: %s', filt.value)
-            compile_result = winpcapy.pcap_compile(self.pcap_sess, prog, filt, opt,
-                                          mask)
-            if compile_result != 0:
-                compile_error = winpcapy.pcap_geterr(self.pcap_sess)
-                errm = 'PCAP filter compile failed: {} [{}]'.format(
-                    compile_result, compile_error)
-                LOG.error(errm)
-                del filt
-                tries += 1
-                time.sleep(0.1 * tries)
-            else:
-                compiled = True
-        if not compiled:
-            raise RuntimeError(errm)
+        # PHAND = CFUNCTYPE(
+        #     None,
+        #     POINTER(c_ubyte),
+        #     POINTER(PcapHeader),
+        #     POINTER(c_ubyte)
+        #     )
+        #packet_handler = PHAND(self._packet_handler)
+        #TODO tidy up this temporary hack to bridge between
+        #netifaces and pcap representation of adapter names
+        if sys.platform.startswith('win'):
+            network = '\\Device\\NPF_%s' % self.network
         else:
-            winpcapy.pcap_setfilter(self.pcap_sess, prog)
-            self.is_capturing = True
-            winpcapy.pcap_loop(self.pcap_sess, PCAP_PACKET_LIMIT, packet_handler, None)
+            network = self.network
+        LOG.debug('Starting capture on network: %s', network)
+        self.pcap_sess = self.fpcapt.pcap(
+            name=network,
+            promisc=True,
+            immediate=True
+            )
+        filtstr = PCAP_FILTER % self.mac_computer_str
+        self.pcap_sess.setfilter(filtstr)
+        self.is_capturing = True
+        for ts, pkt in self.pcap_sess:
+            self._packet_handler([], None, pkt)
+            if self.is_closing:
+                break
 
     def _keepalive(self):
         while not self.is_closing:
@@ -420,22 +412,6 @@ class C24session(object):
                     LOG.debug('TODESK KeepAlive')
                     self._send_packet(*self._prepare_keepalive())
             time.sleep(TIMING_KEEP_ALIVE_LOOP)
-
-    # tommis code
-    # def send_net_packet(nr_of_commands, packet):
-    # net_counter()
-    # global net_counter_var
-    # if nr_of_commands:
-    #     net_nr_of_commands[7] = nr_of_commands
-
-    # net_nr_of_bytes[1] = len(net_nr_of_bytes + net_parity + net_counter_var + net_nr_of_commands + packet)
-    # packet = mac_c24 + mac_computer + net_protocol + net_nr_of_bytes + net_parity + net_counter_var + net_nr_of_commands + packet
-
-    # if (pcap_sendpacket(fp, convert_to_ctype(packet), len(packet)) != 0):
-    #     print("\nError sending the packet: %s\n" % pcap_geterr(fp))
-    #     sys.exit(3)
-    # time.sleep(0.00006)
-    # end tommis code
 
     def _manage_listener(self):
         # Start a Multprocessing Listener
@@ -490,11 +466,15 @@ class C24session(object):
     def _packet_handler(self, param, header, pkt_data):
         """PCAP Packet Handler: Async method called on packet capture"""
         broadcast = False
+        pkt_len = len(pkt_data)
         # build a dynamic class and load the data into it
-        pcl = c24packet_factory(header.contents.len)
+        #pcl = c24packet_factory(header.contents.len)
+        pcl = c24packet_factory(pkt_len)
         pcp = POINTER(pcl)        
         #TODO try loading right into raw
-        packet = cast(pkt_data, pcp).contents         
+        #packet = cast(pkt_data, pcp).contents         
+        packet = pcl()
+        packet = pcl.from_buffer_copy(pkt_data)
 
         #Detailed traffic logging
         #LOG.debug('l:%d %s', int(header.contents.len),
@@ -527,7 +507,7 @@ class C24session(object):
                 self._send_packet(init1.raw, 31)
                 self._send_packet(*init2)
         else:
-            if int(header.contents.len) > 30 and not broadcast:
+            if pkt_len > 30 and not broadcast:
 
                 # Look first to see if this is an ACK
                 # indicated by finding the 0xA) byte in the number of commands/control commands byte
@@ -607,12 +587,13 @@ class C24session(object):
         """sesion wrapper around pcap_sendpacket
         so we can pass in session and trap error"""
         # tmp debug all packet output
-        LOG.debug("Sending Packet of %d bytes: %s", pkt_len,
-                 ''.join('%02X ' % b for b in pkt))
-        #LOG.debug("Sending Packet of %d bytes: %s", pkt_len, "suppressed")
-        pcap_status = winpcapy.pcap_sendpacket(self.pcap_sess, pkt, pkt_len + 14)
-        if pcap_status != 0:
-            LOG.warn("Error sending packet: %s", winpcapy.pcap_geterr(self.pcap_sess))
+        LOG.debug("Sending Packet of %d bytes: %s", pkt_len, hexl(pkt))
+        memaddr = addressof(pkt)
+        sendbuf = string_at(memaddr, pkt_len)
+        pcap_status = self.pcap_sess.sendpacket(sendbuf)
+        #pcap_status = self.pcap_sess.pcap_sendpacket(self.pcap_sess, pkt, pkt_len + 14)
+        if pcap_status != pkt_len:
+            LOG.warn("Error sending packet: %s", self.pcap_sess.geterr())
         else:
             self.pcap_last_sent = tick()
             self.pcap_last_packet = (pkt, pkt_len)
@@ -680,9 +661,8 @@ class C24session(object):
         self.mp_listener = None
         self.mp_is_connected = False
         self.mp_conn = None
-        self.pcap_error_buffer = create_string_buffer(
-            winpcapy.PCAP_ERRBUF_SIZE)  # pcal error buffer
-        self.fpcapt = winpcapy.pcap_t
+        self.pcap_error_buffer = create_string_buffer(PCAP_ERRBUF_SIZE) # pcal error buffer
+        self.fpcapt = pcap
         self.pcap_sess = None
         self.is_capturing = False
         self.is_closing = False
@@ -699,8 +679,8 @@ class C24session(object):
         self.backoff = threading.Timer(TIMING_BACKOFF, self._backoff)
 
         # Locate the specified interface
-        self.network_interface = find_interface(self.network,
-                                                self.pcap_error_buffer)
+        #self.network_interface = find_interface(self.network,
+        #                                        self.pcap_error_buffer)
         self.mac_computer_str, self.mac_computer = get_computer_mac(
             self.network)
         self.mac_control24 = None
@@ -739,8 +719,8 @@ class C24session(object):
         if not self.mp_listener is None:
             self.mp_listener.close()
         # For threads not under our control, ask them nicely
-        if self.is_capturing:
-            winpcapy.pcap_breakloop(self.pcap_sess)
+        #if self.is_capturing:
+        #    winpcapy.pcap_breakloop(self.pcap_sess)
         LOG.info("C24session closed")
 
     def __del__(self):
@@ -761,7 +741,7 @@ def main():
     global LOG
 
     # See if this system has simple defaults we can use
-    default_iface, default_ip = ipv4()
+    default_iface, default_ip = ('0.0.0.0', 9123)
 
     # program options
     oprs = opts_common("control24d Communication Daemon")
