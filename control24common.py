@@ -6,6 +6,7 @@ import logging
 import optparse
 import os
 import time
+import sys
 
 import netifaces
 
@@ -122,34 +123,29 @@ def format_ip(ipaddr, port):
     """from ip and port provide a string with ip:port"""
     return '{}:{}'.format(ipaddr, port)
 
+def get_ip_address(ifname):
+    try:
+        addr_l = netifaces.ifaddresses(ifname)[netifaces.AF_INET]
+        return [{k: v.encode('ascii','ignore') for k, v in addr.iteritems()} for addr in addr_l]
+    except KeyError:
+        return None
 
-def ipv4(interface_name=None):
-    """ Get an IPv4 address plausible default. """
-    # to not take into account loopback addresses (no interest here)
-    ifaces = netifaces.interfaces()
-    default_interface = DEFAULTS.get('interface')
-    default_address = DEFAULTS.get('ip')
-    found = False
-    if not interface_name is None and not interface_name in ifaces:
-        raise KeyError('%s is not a valid interface name' % interface_name)
-    for interface in ifaces:
-        if interface_name is None or unicode(interface_name) == interface:
-            config = netifaces.ifaddresses(interface)
-            # AF_INET is not always present
-            if netifaces.AF_INET in config.keys():
-                for link in config[netifaces.AF_INET]:
-                    # loopback holds a 'peer' instead of a 'broadcast' address
-                    if 'addr' in link.keys() and 'peer' not in link.keys():
-                        default_interface = interface
-                        default_address = link['addr']
-                        found = True
-                        break
+def list_networks():
+    """Gather networks info via netifaces library"""
+    names = [a.encode('ascii','ignore') for a in netifaces.interfaces()]
+    results = {}
+    for interface in names:
+        if sys.platform.startswith('win'):
+            name = '\\Device\\NPF_%s' % interface
+        else:
+            name = interface
+        inner = {
+            'name': name}
+        #ip
+        inner['ip'] = get_ip_address(interface)
+        results[interface] = inner
 
-    if not interface_name is None and not found:
-        raise LookupError(
-            '%s interface has no ipv4 addresses' % interface_name)
-
-    return default_interface, default_address
+    return results
 
 def hexl(inp):
     """Convert to hex string using binascii but
