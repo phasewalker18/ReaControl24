@@ -152,14 +152,19 @@ def list_networks_win(networks):
 
 def list_networks():
     """Gather networks info via netifaces library"""
+    default_not_found = True
     names = [a.encode('ascii', 'ignore') for a in netifaces.interfaces()]
     results = {}
     for interface in names:
         inner = {'pcapname': interface}
         #ip
-        inner['ip'] = get_ip_address(interface)
+        ips = get_ip_address(interface)
+        if ips:
+            inner['ip'] = ips
+            if default_not_found and any([ip.has_key('addr') and not ip.has_key('peer') for ip in ips]):
+                default_not_found = False
+                inner['default'] = True
         results[interface] = inner
-
     if sys.platform.startswith('win'):
         return list_networks_win(results)
     return results
