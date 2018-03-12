@@ -1476,7 +1476,7 @@ def main():
 
     # program options
     oprs = opts_common("control24osc Control24 OSC client")
-    default_daemon = format_ip(default_ip, DEFAULTS.get('daemon'))
+    default_daemon = networks.ipstr_from_tuple(default_ip, DEFAULTS.get('daemon'))
     oprs.add_option(
         "-s",
         "--server",
@@ -1488,7 +1488,7 @@ def main():
         "--listen",
         dest="listen",
         help="accept OSC client from DAW at host:port. default %s" % default_osc_client24)
-    default_daw = format_ip(default_ip, DEFAULTS.get('oscDaw'))
+    default_daw = networks.ipstr_from_tuple(default_ip, DEFAULTS.get('oscDaw'))
     oprs.add_option(
         "-c",
         "--connect",
