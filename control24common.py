@@ -245,17 +245,3 @@ class NetworkHelper(object):
         return '{}:{}'.format(ipaddr, ipport)
 
 
-# Network helper needs to get MAC addresses too
-def get_computer_mac(iface):
-    """Obtain the current computer's MAC address given the interface name"""
-    global LOG
-    network_addresses = netifaces.ifaddresses(iface)[netifaces.AF_LINK]
-    if not network_addresses:
-        LOG.error("Could not find Computer MAC Address")
-        sys.exit(1)
-    else:
-        mac_str = network_addresses[0]['addr']
-        mac_list = MacAddress.from_buffer_copy(
-            bytearray.fromhex(mac_str.replace(':', '')))
-        LOG.debug("Computer MAC Address %s", mac_str)
-        return mac_str, mac_list
