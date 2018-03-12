@@ -695,8 +695,8 @@ def main():
         raise OptionError('No network has the IP address specified.', 'listen')
 
     # Set up Interrupt signal handler so daemon can close cleanly
-    #for sig in [signal.SIGINT]:
-    #    signal.signal(sig, signal_handler)
+    for sig in [signal.SIGINT]:
+        signal.signal(sig, signal_handler)
 
     # Build the C24Session
     if SESSION is None:
