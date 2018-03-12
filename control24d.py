@@ -703,7 +703,15 @@ def main():
         SESSION = C24session(opts, networks)
 
     # Main thread when everything is initiated. Wait for interrupt
-    signal.pause()
+    #while True:
+    #    try:
+    #        time.sleep(TIMING_MAIN_LOOP)
+    #    except KeyboardInterrupt:
+    #        pass         
+
+    while SESSION.is_capturing:
+        time.sleep(TIMING_MAIN_LOOP)
+    #signal.pause()        
     SESSION.close()
 
 
