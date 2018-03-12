@@ -8,24 +8,18 @@ import signal
 import sys
 import threading
 import time
-from ctypes import (POINTER, Union, BigEndianStructure, Structure, c_char, byref, c_long,
-                    c_int, c_ubyte, c_uint16, c_uint32, cast, create_string_buffer, CFUNCTYPE,
-                    addressof, string_at)
+from ctypes import (POINTER, BigEndianStructure, Structure, Union,
+                    addressof, byref, c_char, c_int, c_long, c_ubyte, c_uint16,
+                    c_uint32, cast, create_string_buffer, string_at)
 from multiprocessing.connection import AuthenticationError, Listener
+from optparse import OptionError
 
 import netifaces
-
-from control24common import (
-    start_logging,
-    tick,
-    DEFAULTS,
-    opts_common,
-    format_ip,
-    hexl,
-    list_networks
-)
-
 import pcap
+
+from control24common import (DEFAULTS, NetworkHelper, hexl,
+                             opts_common, start_logging, tick)
+
 #from dist import winpcapy
 
 '''
@@ -59,7 +53,7 @@ TIMING_BEFORE_ACK_INCR = 0.01 # Add this much for each subsequent retry level
 TIMING_MAIN_LOOP = 6            # Loop time for main, which does nothing
 TIMING_LISTENER_POLL = 2        # Poll time for MP Listener to wait for data
 TIMING_LISTENER_RECONNECT = 1   # Pause before a reconnect attempt is made
-TIMING_WAIT_DESC_ACK = 0.067    # Wait period for desk to ACK after send, before warning is logged
+TIMING_WAIT_DESC_ACK = 0.1      # Wait period for desk to ACK after send, before warning is logged
 TIMING_BACKOFF = 0.3            # Time to pause sending data to desk after a retry packet is recvd
 
 # Control Constants
@@ -70,8 +64,6 @@ ECHOCMDS = [0xB0, 0x90, 0xF0]
 # START Globals
 LOG = None
 SESSION = None
-ACK = None
-
 
 # PCAP settings
 PCAP_ERRBUF_SIZE = 256 
@@ -385,10 +377,7 @@ class C24session(object):
         #packet_handler = PHAND(self._packet_handler)
         #TODO tidy up this temporary hack to bridge between
         #netifaces and pcap representation of adapter names
-        if sys.platform.startswith('win'):
-            network = '\\Device\\NPF_%s' % self.network
-        else:
-            network = self.network
+        network = self.network.get('pcapname')
         LOG.debug('Starting capture on network: %s', network)
         self.pcap_sess = self.fpcapt.pcap(
             name=network,
@@ -650,14 +639,13 @@ class C24session(object):
         LOG.debug('backoff complete')
         self.sendlock.set()
 
-    def __init__(self, opts, args):
+    def __init__(self, opts, networks):
         """Constructor to build the session object"""
         global LOG
         LOG = start_logging('control24d', opts.logdir, opts.debug)
         # Create variables for a session
-        self.network = opts.network
-        addrsplit = opts.listen.split(':')
-        self.listen_address = (addrsplit[0], int(addrsplit[1]))
+        self.network = networks.get(opts.network)
+        self.listen_address = networks.ipstr_to_tuple(opts.listen)
         self.mp_listener = None
         self.mp_is_connected = False
         self.mp_conn = None
@@ -678,11 +666,8 @@ class C24session(object):
         self.sendlock.set()
         self.backoff = threading.Timer(TIMING_BACKOFF, self._backoff)
 
-        # Locate the specified interface
-        #self.network_interface = find_interface(self.network,
-        #                                        self.pcap_error_buffer)
-        self.mac_computer_str, self.mac_computer = get_computer_mac(
-            self.network)
+        self.mac_computer_str = self.network.get('mac')
+        self.mac_computer = MacAddress.from_buffer_copy(bytearray.fromhex(self.mac_computer_str.replace(':', '')))
         self.mac_control24 = None
         
         # build a re-usable ack packet
@@ -736,12 +721,14 @@ class C24session(object):
 
 def main():
     """Main function declares options and initialisation routine for daemon."""
-    global ACK
-    global SESSION
-    global LOG
+    global SESSION, LOG
+
+    # Find networks on this machine, to determine good defaults
+    # and help verify options
+    networks = NetworkHelper()
 
     # See if this system has simple defaults we can use
-    default_iface, default_ip = DEFAULTS.get('ip'), DEFAULTS.get('daemon')
+    default_iface, default_ip = networks.get_default()
 
     # program options
     oprs = opts_common("control24d Communication Daemon")
@@ -749,19 +736,25 @@ def main():
         "-n",
         "--network",
         dest="network",
-        help="Ethernet interface to the same network as the Control24. Default %s" %
+        help="Ethernet interface to the same network as the Control24. Default = %s" %
         default_iface)
-    default_listener = format_ip(default_ip, DEFAULTS.get('daemon'))
+    default_listener = networks.ipstr_from_tuple(default_ip, DEFAULTS.get('daemon'))
     oprs.add_option(
         "-l",
         "--listen",
         dest="listen",
-        help="listen on given host:port. default = %s" % default_listener)
+        help="listen on given host:port. Default = %s" % default_listener)
     oprs.set_defaults(network=default_iface)
     oprs.set_defaults(listen=default_listener)
 
-    # Parse args
+    # Parse and verify options
+    # TODO move to argparse and use that to verify
     (opts, args) = oprs.parse_args()
+    if not networks.get(opts.network):
+        print(networks)
+        raise OptionError('Specified network does not exist. Known networks are listed to the output.', 'network')
+    if not networks.verify_ip(opts.listen.split(':')[0]):
+        raise OptionError('No network has the IP address specified.', 'listen')
 
     # Set up Interrupt signal handler so daemon can close cleanly
     for sig in [signal.SIGINT]:
@@ -769,7 +762,7 @@ def main():
 
     # Build the C24Session
     if SESSION is None:
-        SESSION = C24session(opts, args)
+        SESSION = C24session(opts, networks)
 
     # Main Loop when everything is initiated. Log the session state
     while True:
