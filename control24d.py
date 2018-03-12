@@ -325,7 +325,7 @@ class Sniffer(threading.Thread):
         except KeyboardInterrupt:
             C24session.is_capturing = False
 
-            
+
 # Main sesssion class
 class C24session(object):
     """Class to contain all session details with the Control24.
@@ -657,8 +657,6 @@ class C24session(object):
 # END classes
 
 # START main program
-
-
 def main():
     """Main function declares options and initialisation routine for daemon."""
     global SESSION, LOG
