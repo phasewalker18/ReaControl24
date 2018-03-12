@@ -17,7 +17,7 @@ from optparse import OptionError
 import OSC
 
 from control24common import (CHANNELS, DEFAULTS, FADER_RANGE, NetworkHelper,
-                             format_ip, opts_common, start_logging, tick)
+                             opts_common, start_logging, tick)
 from control24map import MAPPING_TREE
 
 '''
