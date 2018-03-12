@@ -1136,8 +1136,13 @@ class C24oscsession(object):
             level = level + 1
             lkp = lkp.get(this_byte)
             if not lkp:
-                raise LookupError(
-                    'Level %d byte not found in MAPPING_TREE: %02x' % (level, this_byte))
+                LOG.warn(
+                    'Level %d byte not found in MAPPING_TREE: %02x. New mapping needed for sequence %s',
+                    level,
+                    this_byte,
+                    cmdbytes
+                    )   
+                return None
             # Copy this level's dict entries but not the children subdict. i.e. flatten/accumulate
             if "Address" in lkp:
                 parsedcmd["addresses"].append('/')
