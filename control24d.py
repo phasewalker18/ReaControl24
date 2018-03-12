@@ -94,70 +94,6 @@ def compare_ctype_array(arr1, arr2):
     return all(ai1 == ai2 for ai1, ai2 in zip(arr1, arr2))
 
 
-def ctype_bytearray_from_literal(hexstring):
-    """Load a ctype ubyte array from a string buffer"""
-    blen = len(hexstring)
-    buf = create_string_buffer(hexstring, blen)
-    cobj = (c_ubyte * blen).from_buffer_copy(buf)
-    return cobj
-
-
-def get_computer_mac(iface):
-    """Obtain the current computer's MAC address given the interface name"""
-    global LOG
-    network_addresses = netifaces.ifaddresses(iface)[netifaces.AF_LINK]
-    if not network_addresses:
-        LOG.error("Could not find Computer MAC Address")
-        sys.exit(1)
-    else:
-        mac_str = network_addresses[0]['addr']
-        mac_list = MacAddress.from_buffer_copy(
-            bytearray.fromhex(mac_str.replace(':', '')))
-        LOG.debug("Computer MAC Address %s", mac_str)
-        return mac_str, mac_list
-
-
-def convert_to_ctype(packet_byte_list):
-    """convert a packet string into the C language byte array type needed for pcap send"""
-    listlen = len(packet_byte_list)
-    ret = (c_ubyte * listlen)()
-    for ind, byt in enumerate(packet_byte_list):
-        ret[ind] = byt
-    return ret
-
-def find_interface(name, errbuf):
-    """Check the interface with name exists, return the interface"""
-    alldevs = POINTER(pcap.pcap_if_t)()
-    # Retrieve the device list on the local machine
-    if pcap.pcap_findalldevs(byref(alldevs), errbuf) == -1:
-        raise KeyError(
-            "Error locating interfaces. Are you running me with SUDO? " +
-            "Error from pcap_findalldevs: %s\n"
-            % errbuf.value)
-
-    dev = alldevs.contents
-    found = None
-    i = 0
-    while dev and found is None:
-        i += 1
-        # If the list of interfaces during search is desired:
-        #LOG.debug("%d. %s", i, dev.name)
-        if dev.name == name:
-            found = dev
-        if dev.next:
-            dev = dev.next.contents
-        else:
-            dev = False
-
-    if i == 0:
-        LOG.error("No interfaces found. Are you running me SUDO?")
-        sys.exit(1)
-
-    if not found is None:
-        return found
-    else:
-        raise KeyError("Can't find specified interface: %s\n" % name)
-
 # END functions
 
 # START classes
@@ -182,6 +118,9 @@ def pcap_packetr_tostring(pcp):
         hexl(pcp.struc.ethheader.protocol), pcp.struc.c24header.numbytes, pcp.struc.c24header.cmdcounter,
         pcp.struc.c24header.retry, pcp.struc.numcommands, hexl(pcp.struc.packetdata))
     return msg
+
+
+
 
 
 class TimeVal(Structure):
@@ -358,39 +297,41 @@ def pcappacketr_factory(pkt_len):
     return PcapPacketR
 
 
+class Sniffer(threading.Thread):
+    """Thread class to hold the packet sniffer loop
+    and ensure it is interruptable"""
+    def __init__(self, c24session):
+        super(Sniffer, self).__init__()
+        self.daemon = True
+        self.name='thread_sniffer'
+        network = c24session.network.get('pcapname')
+        c24session.pcap_sess = c24session.fpcapt.pcap(
+            name=network,
+            promisc=True,
+            immediate=True,
+            timeout_ms=50
+            )
+        filtstr = PCAP_FILTER % c24session.mac_computer_str
+        c24session.pcap_sess.setfilter(filtstr)
+        c24session.is_capturing = True
+        self.pcap_sess = c24session.pcap_sess
+        self.packet_handler = c24session.packet_handler
+
+    def run(self):
+        """pcap loop, runs until interrupted"""
+        try:
+            for _, pkt in self.pcap_sess:
+                self.packet_handler(pkt)
+        except KeyboardInterrupt:
+            C24session.is_capturing = False
+
+            
 # Main sesssion class
 class C24session(object):
     """Class to contain all session details with the Control24.
     Only 1 session is expected"""
 
     # Methods to go into threads
-
-    def _start_pcap_loop(self):
-        """PCAP capture loop: designate the handler function,
-        open the session and start the capture loop"""
-        # PHAND = CFUNCTYPE(
-        #     None,
-        #     POINTER(c_ubyte),
-        #     POINTER(PcapHeader),
-        #     POINTER(c_ubyte)
-        #     )
-        #packet_handler = PHAND(self._packet_handler)
-        #TODO tidy up this temporary hack to bridge between
-        #netifaces and pcap representation of adapter names
-        network = self.network.get('pcapname')
-        LOG.debug('Starting capture on network: %s', network)
-        self.pcap_sess = self.fpcapt.pcap(
-            name=network,
-            promisc=True,
-            immediate=True
-            )
-        filtstr = PCAP_FILTER % self.mac_computer_str
-        self.pcap_sess.setfilter(filtstr)
-        self.is_capturing = True
-        for ts, pkt in self.pcap_sess:
-            self._packet_handler([], None, pkt)
-            if self.is_closing:
-                break
 
     def _keepalive(self):
         while not self.is_closing:
@@ -452,7 +393,7 @@ class C24session(object):
         self.mp_listener.close()
 
     # callbacks / event handlers (threaded)
-    def _packet_handler(self, param, header, pkt_data):
+    def packet_handler(self, pkt_data):
         """PCAP Packet Handler: Async method called on packet capture"""
         broadcast = False
         pkt_len = len(pkt_data)
@@ -652,6 +593,7 @@ class C24session(object):
         self.pcap_error_buffer = create_string_buffer(PCAP_ERRBUF_SIZE) # pcal error buffer
         self.fpcapt = pcap
         self.pcap_sess = None
+        self.sniffer = None
         self.is_capturing = False
         self.is_closing = False
         self.pcap_last_sent = tick()
@@ -675,9 +617,7 @@ class C24session(object):
         self.ack.struc.ethheader.macsrc = self.mac_computer
         
         # Start the pcap loop background thread
-        self.thread_pcap_loop = threading.Thread(
-            target=self._start_pcap_loop, name='thread_pcap_loop')
-        self.thread_pcap_loop.daemon = True
+        self.thread_pcap_loop = Sniffer(self)
         self.thread_pcap_loop.start()
         # Start a thread to keep sending packets to desk to keep alive
         self.thread_keepalive = threading.Thread(
@@ -757,17 +697,16 @@ def main():
         raise OptionError('No network has the IP address specified.', 'listen')
 
     # Set up Interrupt signal handler so daemon can close cleanly
-    for sig in [signal.SIGINT]:
-        signal.signal(sig, signal_handler)
+    #for sig in [signal.SIGINT]:
+    #    signal.signal(sig, signal_handler)
 
     # Build the C24Session
     if SESSION is None:
         SESSION = C24session(opts, networks)
 
-    # Main Loop when everything is initiated. Log the session state
-    while True:
-        LOG.debug("Loop: %s", SESSION)
-        time.sleep(TIMING_MAIN_LOOP)
+    # Main thread when everything is initiated. Wait for interrupt
+    signal.pause()
+    SESSION.close()
 
 
 if __name__ == '__main__':
