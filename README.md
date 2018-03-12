@@ -25,11 +25,38 @@ By default all log outputs will be created into a subdirectory below wherever yo
 
 The installation process for Windows is quite a lot more involved, as the OS does not come supplied with several requirements:
 
-Download and install the following Windows programs:
+* Download and install Python 2.7.x - https://www.python.org/downloads
+* Download and install Npcap ensuring to tick the WinPcap API-compatible mode which is off by default - https://nmap.org/npcap/
+* Download and install the c++ compiler for python - https://www.microsoft.com/en-us/download/details.aspx?id=44266
+* Download the sources from github for: pypcap - https://github.com/pynetwork/pypcap/releases - currently 1.2.0
 
-* Python 2.7.x
-* NPCAP
-* TODO - copy in the proper instructions
+(Following is a re-statement of the procedure for 'installation from sources' of pypcap found at - https://github.com/pynetwork/pypcap/blob/master/docs/index.rst)
+
+Choose a folder to work in: The 'install' subfolder of ReaControl24 is a reasonable choice.
+
+Unzip the pypcap download into the chosen install folder. 
+Check if the zip made 2 folders called 'pypcap-1.2.0' or similar, one within the other. If so, move the inner one down a level so it sits under 'install'
+Unzip the npcap sdk download. Again see if this results in an inner folder and if so, move it down.
+Rename the folder for this: "wpdpack"
+
+Start a windows command prompt from the start menu or run "cmd"
+
+use the CD command to get to the pypcap sources directory you just unzipped, then run the command as follows:
+
+C:\Users\Public\Downloads\ReaControl24\install\pypcap-1.2.0> python setup.py install
+
+a lot of output will scroll up the screen, but towards the end should be shown:
+
+Installed c:\python27\lib\site-packages\pypcap-1.2.0-py2.7-win-amd64.egg
+
+Now return to the main installation instructions to perform this command: >pip install -r requirements.txt -U
+
+When complete, to run the daemon, rather than using 'sudo', use an 'Administrator command prompt' and omit the sudo
+Also worthy of note is that network names in windows use a GUID, so you must locate that first. 
+(WILL BE ADDING a HELPER FOR THIS)
+
+python control24d.py -n {guid}
+
 
 
 ## Getting Started
@@ -152,3 +179,4 @@ All other intellectual property rights remain with the original owners.
 ## Acknowledgments
 
 * **2mmi** - *Initial Idea, inspiration and saviour of us all
+
