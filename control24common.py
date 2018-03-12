@@ -183,7 +183,7 @@ class NetworkHelper(object):
     def get_mac_address(ifname):
         """Use netifaces to retrieve mac address, but handle if it doesn't exist"""
         try:
-            addr_l = mac = netifaces.ifaddresses(ifname)[netifaces.AF_LINK]
+            addr_l = netifaces.ifaddresses(ifname)[netifaces.AF_LINK]
             addr = addr_l[0].get('addr')
             return addr.encode('ascii', 'ignore')
         except KeyError:
