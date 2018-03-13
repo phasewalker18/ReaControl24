@@ -204,12 +204,11 @@ class AckPacket(Union):
 
 
 def pcap_packetb_tostring(pcp):
-    msg = 'BCAST d:{} v:{} u1:{} u2:{} u3:{}'.format(
+    msg = 'BCAST d:{} v:{} u1:{} u2:{} '.format(
         pcp.device,
         pcp.version,
         hexl(pcp.unknown1),
-        hexl(pcp.unknown2),
-        hexl(pcp.unknown3)
+        hexl(pcp.unknown2)
     )
 
     return msg
@@ -220,11 +219,10 @@ class C24BcastData(BigEndianStructure):
     to get the details out of it"""
     _pack_ = 1
     _fields_ = [
-        ("unknown1", c_ubyte * 15),
-        ("version", c_char * 5),
-        ("unknown2", c_ubyte * 5),
+        ("unknown1", c_ubyte * 14),
+        ("version", c_char * 9),
         ("device", c_char * 8),
-        ("unknown3", c_ubyte * 3)
+        ("unknown2", c_ubyte * 3)
         ]
 
 
