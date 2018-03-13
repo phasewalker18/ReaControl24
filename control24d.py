@@ -209,13 +209,13 @@ def pcap_packetb_tostring(pcp):
         pcp.version,
         hexl(pcp.eyohohone),
         pcp.lessthan,
-        hexl(pcp.ohseven),
+        pcp.ohseven,
         pcp.txq,
-        hexl(pcp.aycee),
+        pcp.aycee,
         hexl(pcp.unknown3),
         hexl(pcp.unknown4),
         hexl(pcp.unknown5),
-        hexl(pcp.unknown6),
+        pcp.unknown6,
         hexl(pcp.unknown8),
         hexl(pcp.unknown9)
     )
