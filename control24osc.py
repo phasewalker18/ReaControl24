@@ -1333,8 +1333,11 @@ class C24oscsession(object):
             LOG.debug('Starting OSC Listener at %s', self.listen)
             try:
                 self.osc_listener.serve_forever()
-            except Exception:
-                LOG.error("OSC Listener error", exc_info=True)
+            except Exception as exc:
+                if exc[0] == 9:
+                    LOG.debug("OSC shutdown error", exc_info=True)
+                else:
+                    LOG.error("OSC Listener error", exc_info=True)
                 #raise
             LOG.debug('OSC Listener stopped')
             time.sleep(TIMING_OSC_LISTENER_RESTART)
