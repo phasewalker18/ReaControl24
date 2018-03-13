@@ -204,20 +204,12 @@ class AckPacket(Union):
 
 
 def pcap_packetb_tostring(pcp):
-    msg = 'BCAST d:{} v:{} eyohohone:{} lessthan:{} ohseven:{} txq:{} aycee:{} u3:{} u4:{} u5:{} u6:{} u7:{}  u8:{}'.format(
-        hexl(pcp.device),
+    msg = 'BCAST d:{} v:{} u1:{} u2:{} u3:{}'.format(
+        pcp.device,
         pcp.version,
-        hexl(pcp.eyohohone),
-        pcp.lessthan,
-        pcp.ohseven,
-        pcp.txq,
-        pcp.aycee,
-        hexl(pcp.unknown3),
-        hexl(pcp.unknown4),
-        hexl(pcp.unknown5),
-        pcp.unknown6,
-        hexl(pcp.unknown7),
-        hexl(pcp.unknown8)
+        hexl(pcp.unknown1),
+        hexl(pcp.unknown2),
+        hexl(pcp.unknown3)
     )
 
     return msg
@@ -228,19 +220,11 @@ class C24BcastData(BigEndianStructure):
     to get the details out of it"""
     _pack_ = 1
     _fields_ = [
-        ("eyohohone", c_ubyte * 2),
-        ("lessthan", c_char),
-        ("ohseven", c_ubyte),
-        ("txq", c_char * 3),
-        ("aycee", c_ubyte),
-        ("unknown3", c_ubyte * 2),
-        ("unknown4", c_ubyte * 2),
-        ("unknown5", c_ubyte * 2),
-        ("unknown6", c_ubyte),
+        ("unknown1", c_ubyte * 15),
         ("version", c_char * 5),
-        ("unknown7", c_ubyte * 5),
+        ("unknown2", c_ubyte * 5),
         ("device", c_char * 8),
-        ("unknown8",c_ubyte * 3)
+        ("unknown3", c_ubyte * 3)
         ]
 
 
