@@ -204,10 +204,10 @@ class NetworkHelper(object):
             try:
                 net_key = wr.OpenKey(reg_key, net_regkey)
                 net_name = wr.QueryValueEx(net_key, 'Name')[0]
+                if net_name:
+                    val['name'] = net_name
             except WindowsError: #pylint: disable=E0602
                 pass
-            if net_name:
-                val['name'] = net_name
         wr.CloseKey(reg_key)
         return networks
 
