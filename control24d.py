@@ -413,7 +413,7 @@ class C24session(object):
         if self.mac_control24 is None:
             macsrc = packet.struc.ethheader.macsrc
             if broadcast and compare_ctype_array(macsrc.vendor,C_VENDOR):
-                LOG.info('Desk detected: %s', hexl(macsrc))
+                LOG.info('Desk detected: %s %s at %s', bcast_data.device, bcast_data.version, hexl(macsrc))
                 # copy the mac address from the packet to the session
                 self.mac_control24 = MacAddress.from_buffer_copy(macsrc)
                 self.ack.struc.ethheader.macdest = self.mac_control24
