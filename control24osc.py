@@ -1293,7 +1293,7 @@ class C24oscsession(object):
                     # Connection refused
                     if exc[0] == 61:
                         LOG.error(
-                            'Error trying to connect to control24d at %s. May not be running. Will try again.', self.server, exc_info=True)
+                            'Error trying to connect to control24d at %s. May not be running. Will try again.', self.server)
                         time.sleep(TIMING_SERVER_POLL)
                     else:
                         LOG.error(
@@ -1310,7 +1310,7 @@ class C24oscsession(object):
                     datarecv = self.c24_client.recv_bytes()
                     self._desk_to_daw(datarecv)
                 except EOFError:
-                    LOG.error('MP Client EOFError')
+                    LOG.error('MP Client EOFError: Daemon closed communication.')
                     self.c24_client_is_connected = False
                     self.c24_client = None
                     time.sleep(TIMING_SERVER_POLL)
@@ -1364,7 +1364,7 @@ class C24oscsession(object):
                 try:
                     self.osc_client.send(testmsg)
                 except OSC.OSCClientError:
-                    LOG.error("Sending Test message got an error", exc_info=True)
+                    LOG.error("Sending Test message got an error. DAW is no longer reponding.")
                     self._disconnect_osc_client()
                 except Exception:
                     LOG.error("OSC Client Unhandled exception", exc_info=True)
