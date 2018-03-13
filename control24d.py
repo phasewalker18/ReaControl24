@@ -204,10 +204,7 @@ class AckPacket(Union):
 
 
 def pcap_packetb_tostring(pcp):
-    msg = 'BCAST from:{}{} prot:{} d:{} v:{} eyohohone:{} lessthan:{} ohseven:{} txq:{} aycee:{} u3:{} u4:{} u5:{} u6:{} u7:{}  u8:{}'.format(
-        hexl(pcp.struc.ethheader.macsrc.vendor),
-        hexl(pcp.struc.ethheader.macsrc.device),
-        hexl(pcp.struc.ethheader.protocol),
+    msg = 'BCAST d:{} v:{} eyohohone:{} lessthan:{} ohseven:{} txq:{} aycee:{} u3:{} u4:{} u5:{} u6:{} u7:{}  u8:{}'.format(
         hexl(pcp.device),
         pcp.version,
         hexl(pcp.eyohohone),
