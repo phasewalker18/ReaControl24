@@ -694,15 +694,23 @@ def main():
     if not networks.verify_ip(opts.listen.split(':')[0]):
         raise OptionError('No network has the IP address specified.', 'listen')
 
-    # Set up Interrupt signal handler so daemon can close cleanly
-    signal.signal(signal.SIGINT, signal_handler)
 
     # Build the C24Session
     if SESSION is None:
         SESSION = C24session(opts, networks)
 
     # Main thread when everything is initiated. Wait for interrupt
-    signal.pause()
+    if sys.platform.startswith('win'):
+        # Set up Interrupt signal handler so daemon can close cleanly
+        signal.signal(signal.SIGINT, signal_handler)
+        while True:
+            try:
+                time.sleep(TIMING_MAIN_LOOP)
+            except KeyboardInterrupt:
+                break
+    else:
+        signal.pause()
+    
     SESSION.close()
 
 

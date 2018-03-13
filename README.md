@@ -8,9 +8,11 @@ It will translate between the binary protocol of the desk and OSC messages to ex
 
 Some basic stateful mode handling is provided to receive text from the DAW and display it on the scribble strips, and deal with issues like fader command echos.
 
+You will need super user (or elevated Administrator in Windows) privileges to use this software, as it uses libpcap packet capture library to establish network connectivity with the Control24 ethernet interface. All other TCP and UDP traffic is ignored/filtered out, so you should not have any privacy concerns if the source has not been tampered with.
+
+
 ### Installing - OSX, macos, Linux
 
-You will need super user privileges to use this software, as it uses libpcap packet capture library to establish network connectivity with the Control24 ethernet interface. All other TCP and UDP traffic is ignored/filtered out, so you should not have any privacy concerns if the source has not been tampered with.
 Ensure the current or default python environment has a 2.x interpreter in the current path, and install the pre-requisites into user environment using pip or similar
 
 Example pip install
@@ -23,7 +25,7 @@ By default all log outputs will be created into a subdirectory below wherever yo
 
 ### Installing - Windows 10
 
-The installation process for Windows is quite a lot more involved, as the OS does not come supplied with several requirements:
+The installation process for Windows is quite a bit more involved, as the OS does not come supplied with several requirements:
 
 * Download and install Python 2.7.x - https://www.python.org/downloads
 * Download and install Npcap ensuring to tick the WinPcap API-compatible mode which is off by default - https://nmap.org/npcap/
@@ -126,7 +128,8 @@ All this can be changed by use of command line parameters. Use the --help switch
 python control24d.py --help
 ```
 
-The repo was developed for OSX but in theory, being python, should be portable to other platforms. Please test and report your results.
+To exit either process, press CTRL+C on the keyboard in the shell window, or send the process a SIGINT.
+In Windows, close the Command Prompt window where you launched the program.
 
 ## Running the tests
 
@@ -167,6 +170,8 @@ Other attributes determine how the tree is 'walked' according to the binary rece
 This is freeware, non warranty, non commercial code to benefit the hungry children and hungrier DAW users of the world. If you pull and don't contribute, you should feel bad. Real bad. 
 Please develop here in this repo for the benefit of all. All pull and merge requests will be accepted and best efforts made to make sense of it all when merging.
 
+Welcome to the latest contributors and collaborators! Your help is very much appreciated.
+
 ## Versioning
 
 We will attempt to use [SemVer](http://semver.org/) for versioning. For the versions available, see the tags on this repository.
@@ -178,7 +183,7 @@ We will attempt to use [SemVer](http://semver.org/) for versioning. For the vers
 
 If you are feeling especially thankful for this entering your life, please feel free to send donations to this BTC address: 1BPQvQjcAGuMjBnG25wuoD64i7KmWZRrpnN
 
-See also the list of contributors
+See also the list of contributors via github.
 
 ## License
 
