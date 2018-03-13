@@ -71,7 +71,7 @@ def signal_handler(sig, stackframe):
     """Exit the daemon if a signal is received"""
     signals_dict = dict((getattr(signal, n), n)
                         for n in dir(signal) if n.startswith('SIG') and '_' not in n)
-    LOG.info("daemon shutting down as %s received.", signals_dict[sig])
+    LOG.info("control24osc shutting down as %s received.", signals_dict[sig])
     if not SESSION is None:
         SESSION.close()
     sys.exit(0)
