@@ -334,7 +334,8 @@ class Sniffer(threading.Thread):
         """pcap loop, runs until interrupted"""
         try:
             for pkt in self.pcap_sess:
-                self.packet_handler(*pkt)
+                if not pkt is None:
+                    self.packet_handler(*pkt)
         except KeyboardInterrupt:
             C24session.is_capturing = False
 
