@@ -216,8 +216,8 @@ def pcap_packetb_tostring(pcp):
         hexl(pcp.unknown4),
         hexl(pcp.unknown5),
         pcp.unknown6,
-        hexl(pcp.unknown8),
-        hexl(pcp.unknown9)
+        hexl(pcp.unknown7),
+        hexl(pcp.unknown8)
     )
 
     return msg
