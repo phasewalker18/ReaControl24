@@ -333,8 +333,8 @@ class Sniffer(threading.Thread):
     def run(self):
         """pcap loop, runs until interrupted"""
         try:
-            for _, pkt in self.pcap_sess:
-                self.packet_handler(pkt)
+            for pkt in self.pcap_sess:
+                self.packet_handler(*pkt)
         except KeyboardInterrupt:
             C24session.is_capturing = False
 
@@ -406,7 +406,7 @@ class C24session(object):
         self.mp_listener.close()
 
     # callbacks / event handlers (threaded)
-    def packet_handler(self, pkt_data):
+    def packet_handler(self, ts, pkt_data):
         """PCAP Packet Handler: Async method called on packet capture"""
         broadcast = False
         pkt_len = len(pkt_data)
