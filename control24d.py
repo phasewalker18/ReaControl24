@@ -9,12 +9,11 @@ import sys
 import threading
 import time
 from ctypes import (POINTER, BigEndianStructure, Structure, Union,
-                    addressof, byref, c_char, c_int, c_long, c_ubyte, c_uint16,
+                    addressof, c_char, c_int, c_long, c_ubyte, c_uint16,
                     c_uint32, cast, create_string_buffer, string_at)
 from multiprocessing.connection import AuthenticationError, Listener
 from optparse import OptionError
 
-import netifaces
 import pcap
 
 from control24common import (DEFAULTS, NetworkHelper, hexl,
@@ -106,21 +105,24 @@ def pcap_packet_tostring(pcp):
         hexl(pcp.struc.ethheader.macdest),
         hexl(pcp.struc.ethheader.macsrc.vendor),
         hexl(pcp.struc.ethheader.macsrc.device),
-        hexl(pcp.struc.ethheader.protocol), hexl(pcp.struc.packetdata))
+        hexl(pcp.struc.ethheader.protocol), 
+        hexl(pcp.struc.packetdata))
     return msg
 
 
 def pcap_packetr_tostring(pcp):
-    msg = 'to:{} from:{} {} prot:{} b:{} c:{} r:{} nc:{} data:{}'.format(
+    msg = 'to:{} from:{}{} prot:{} bytes:{} c_cnt:{} s_cnt:{} retry:{} nc:{} data:{}'.format(
         hexl(pcp.struc.ethheader.macdest),
         hexl(pcp.struc.ethheader.macsrc.vendor),
         hexl(pcp.struc.ethheader.macsrc.device),
-        hexl(pcp.struc.ethheader.protocol), pcp.struc.c24header.numbytes, pcp.struc.c24header.cmdcounter,
-        pcp.struc.c24header.retry, pcp.struc.numcommands, hexl(pcp.struc.packetdata))
+        hexl(pcp.struc.ethheader.protocol),
+        pcp.struc.c24header.numbytes,
+        pcp.struc.c24header.cmdcounter,
+        pcp.struc.c24header.sendcounter,
+        pcp.struc.c24header.retry,
+        pcp.struc.numcommands,
+        hexl(pcp.struc.packetdata))
     return msg
-
-
-
 
 
 class TimeVal(Structure):
@@ -200,12 +202,27 @@ class AckPacket(Union):
         super(AckPacket, self).__init__()
         self.struc.__init__()
 
-def pcap_packetb_tostring(pcb):
-    """method to pretty print the below class"""
-    #TODO see if this can be moved into the str method of the class
-    msg = 'to:BROADCAST v:{} {}'.format(
-        pcb.device,
-        pcb.version)
+
+def pcap_packetb_tostring(pcp):
+    msg = 'BCAST from:{}{} prot:{} d:{} v:{} eyohohone:{} lessthan:{} ohseven:{} txq:{} aycee:{} u3:{} u4:{} u5:{} u6:{} u7:{}  u8:{}'.format(
+        hexl(pcp.struc.ethheader.macsrc.vendor),
+        hexl(pcp.struc.ethheader.macsrc.device),
+        hexl(pcp.struc.ethheader.protocol),
+        hexl(pcp.device),
+        pcp.version,
+        hexl(pcp.eyohohone),
+        pcp.lessthan,
+        hexl(pcp.ohseven),
+        pcp.txq,
+        hexl(pcp.aycee),
+        hexl(pcp.unknown3),
+        hexl(pcp.unknown4),
+        hexl(pcp.unknown5),
+        hexl(pcp.unknown6),
+        hexl(pcp.unknown8),
+        hexl(pcp.unknown9)
+    )
+
     return msg
 
 
@@ -220,14 +237,13 @@ class C24BcastData(BigEndianStructure):
         ("txq", c_char * 3),
         ("aycee", c_ubyte),
         ("unknown3", c_ubyte * 2),
-        ("unknown4", c_uint16),
-        ("unknown5", c_uint16),
-        ("unknown6", c_uint16),
-        ("unknown7", c_ubyte),
+        ("unknown4", c_ubyte * 2),
+        ("unknown5", c_ubyte * 2),
+        ("unknown6", c_ubyte),
         ("version", c_char * 5),
-        ("unknown8", c_ubyte * 5),
+        ("unknown7", c_ubyte * 5),
         ("device", c_char * 8),
-        ("unknown9",c_ubyte * 3)
+        ("unknown8",c_ubyte * 3)
         ]
 
 
@@ -407,8 +423,7 @@ class C24session(object):
         packet = pcl.from_buffer_copy(pkt_data)
 
         #Detailed traffic logging
-        #LOG.debug('l:%d %s', int(header.contents.len),
-        #          hexl(packet))
+        LOG.debug('Packet Received: %s',  pcap_packetr_tostring(packet))
 
         # Decode any broadcast packets
         if compare_ctype_array(packet.struc.ethheader.macdest.vendor, C_BROADCAST):
@@ -420,7 +435,7 @@ class C24session(object):
         if self.mac_control24 is None:
             macsrc = packet.struc.ethheader.macsrc
             if broadcast and compare_ctype_array(macsrc.vendor,C_VENDOR):
-                LOG.info('Control24 Broadcast detected from: %s', hexl(macsrc))
+                LOG.info('Desk detected: %s', hexl(macsrc))
                 # copy the mac address from the packet to the session
                 self.mac_control24 = MacAddress.from_buffer_copy(macsrc)
                 self.ack.struc.ethheader.macdest = self.mac_control24
