@@ -1266,7 +1266,7 @@ class C24oscsession(object):
                     inst.d_c(parsed_cmd)
                 else:
                     # NON CLASS based Desk-DAW
-                    val = parsed_cmd['Value']
+                    val = parsed_cmd.get('Value')
                     if address.startswith('/button/track/'):
                         # Channel strip buttons.
                         # We will assume the track object is here already
