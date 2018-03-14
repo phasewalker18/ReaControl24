@@ -992,7 +992,9 @@ class C24buttonled(C24base):
     def d_c(self, parsedcmd):
         addr = parsedcmd.get('address')
         val = parsedcmd.get('Value')
-        self.set_btn(addr, val)
+        valr = self.set_btn(addr, val)
+        osc_msg = OSC.OSCMessage(addr)
+        self.desk.osc_client_send(osc_msg, valr)
 
     def set_btn(self, addr, val):
         try:
@@ -1019,6 +1021,7 @@ class C24buttonled(C24base):
                 self.desk.c24_client_send(self.cmdbytes)
         except KeyError:
             LOG.warn("OSCServer LED not found: %s %s", addr, str(val))
+        return val
 
     def toggle_state(self, addr):
         state = self.states.get('addr') or 0.0
@@ -1265,20 +1268,11 @@ class C24oscsession(object):
                     # Call the desk_to_computer method of the class
                     inst.d_c(parsed_cmd)
                 else:
-                    # NON CLASS based Desk-DAW
-                    val = parsed_cmd.get('Value')
-                    if address.startswith('/button/track/'):
-                        # Channel strip buttons.
-                        # We will assume the track object is here already
+                    # NON CLASS based Desk-DAW i.e. basic buttons
+                    if 'button' in parsed_cmd.get('addresses'):
                         osc_msg = OSC.OSCMessage(address)
                         if not osc_msg is None:
-                            self.osc_client_send(osc_msg, val)
-                    # ANY OTHER buttons
-                    # If the Reaper.OSC file has something at this address
-                    elif address.startswith('/button'):
-                        osc_msg = OSC.OSCMessage(address)
-                        if not osc_msg is None:
-                            self.osc_client_send(osc_msg, val)
+                            self.osc_client_send(osc_msg, parsed_cmd.get('Value'))
 
     def _daw_to_desk(self, addr, tags, stuff, source):
         """message handler for the OSC listener"""
