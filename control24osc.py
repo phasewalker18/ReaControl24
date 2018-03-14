@@ -1008,25 +1008,24 @@ class C24buttonled(C24base):
             tog = lkpbtn.get('Toggle')
             if (tog and val==1) or not tog:
                 if tog:
-                    val = self.toggle_state(addr)
+                    vals = self.toggle_state(addr)
+                else:
+                    vals = val
                 # Copy the byte sequence injecting track number
                 for ind, byt in enumerate(lkpbtn['cmdbytes']):
                     c_byt = c_ubyte(byt)
                     if ind == tbyt and not self.track is None:
                         c_byt.value = c_byt.value | self.track.track_number
                     # On or Off
-                    if ind == 2 and val == 1:
+                    if ind == 2 and vals == 1:
                         c_byt.value = c_byt.value | 0x40
                     self.cmdbytes[ind] = c_byt
                 LOG.debug("Button LED cmdbytes: %s", binascii.hexlify(self.cmdbytes))
                 self.desk.c24_client_send(self.cmdbytes)
+                return vals
         except KeyError:
             LOG.warn("OSCServer LED not found: %s %s", addr, str(val))
-        if tog:
-            return val
-        else:
-            return None
-        
+        return None
 
     def toggle_state(self, addr):
         state = self.states.get('addr') or 0.0
