@@ -127,4 +127,4 @@ MIDILISTACTION i/midilistaction t/midilistaction/@
 MASTER_VU_L n/track/c24vumeter/0/25
 MASTER_VU_R n/track/c24vumeter/1/25
 
-LAST_TOUCHED_FX_NAME s/track/c24scribstrip/name/25 s/track/c24scribstrip/name/26 s/track/c24scribstrip/name/27 s/track/c24scribstrip/name/28 s/track/c24scribstrip/name/29 s/track/c24scribstrip/name/30 s/track/c24scribstrip/name/31
+TRACK_NAME s/track/c24scribstrip/name/25 s/track/c24scribstrip/name/26 s/track/c24scribstrip/name/27 s/track/c24scribstrip/name/28 s/track/c24scribstrip/name/29 s/track/c24scribstrip/name/30 s/track/c24scribstrip/name/31
