@@ -1157,7 +1157,7 @@ class C24oscsession(object):
                 parsedcmd["addresses"].append('/')
                 parsedcmd["addresses"].append(lkp["Address"])
             parsedcmd.update(
-                {key: lkp[key] for key in lkp if "Byte" in key or "Class" in key or "SetMode" in key}
+                {key: lkp[key] for key in lkp if "Byte" in key or "Class" in key or "SetMode" in key or "Toggle" in key}
             )
             if 'ChildByte' in lkp:
                 this_byte_num = lkp['ChildByte']
@@ -1207,7 +1207,7 @@ class C24oscsession(object):
             except IndexError:
                 value_byte = 0x00
                 parsedcmd["Value"] = 0.0
-
+        
         parsedcmd["address"] = ''.join(parsedcmd["addresses"])
         return parsedcmd
 
@@ -1248,13 +1248,13 @@ class C24oscsession(object):
                             # We will assume the track object is here already
                             osc_msg = OSC.OSCMessage(address)
                             if not osc_msg is None:
-                                self.osc_client_send(osc_msg, parsed_cmd['Value'])
+                                self.osc_client_send(osc_msg, val)
                         # ANY OTHER buttons
                         # If the Reaper.OSC file has something at this address
                         elif address.startswith('/button'):
                             osc_msg = OSC.OSCMessage(address)
                             if not osc_msg is None:
-                                self.osc_client_send(osc_msg, parsed_cmd['Value'])
+                                self.osc_client_send(osc_msg, val)
 
     def _daw_to_desk(self, addr, tags, stuff, source):
         """message handler for the OSC listener"""
