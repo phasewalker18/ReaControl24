@@ -993,8 +993,9 @@ class C24buttonled(C24base):
         addr = parsedcmd.get('address')
         val = parsedcmd.get('Value')
         valr = self.set_btn(addr, val)
-        osc_msg = OSC.OSCMessage(addr)
-        self.desk.osc_client_send(osc_msg, valr)
+        if not valr is None:
+            osc_msg = OSC.OSCMessage(addr)
+            self.desk.osc_client_send(osc_msg, valr)
 
     def set_btn(self, addr, val):
         try:
@@ -1021,7 +1022,11 @@ class C24buttonled(C24base):
                 self.desk.c24_client_send(self.cmdbytes)
         except KeyError:
             LOG.warn("OSCServer LED not found: %s %s", addr, str(val))
-        return val
+        if tog:
+            return val
+        else:
+            return None
+        
 
     def toggle_state(self, addr):
         state = self.states.get('addr') or 0.0
