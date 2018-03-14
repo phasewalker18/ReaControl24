@@ -16,7 +16,7 @@ from optparse import OptionError
 
 import OSC
 
-from control24common import (CHANNELS, DEFAULTS, FADER_RANGE, NetworkHelper,
+from control24common import (DEFAULTS, FADER_RANGE, NetworkHelper,
                              opts_common, start_logging, tick)
 from control24map import MAPPING_TREE
 
@@ -276,6 +276,8 @@ class C24modifiers(C24base):
 class C24desk(C24base):
     """Class to represent the desk, state and
     instances to help conversions and behaviour"""
+    channels = 24
+    busvus = 1
 
     def __init__(self, osc_client_send, c24_client_send):
         # TODO original mode management to be deprecated
@@ -327,12 +329,16 @@ class C24track(C24base):
         self.mode = self.desk.mode
         self.osctrack_number = track_number + 1
 
-        if self.track_number <= CHANNELS:
+        if self.track_number < self.desk.channels:
             self.c24fader = C24fader(self)
             self.c24vpot = C24vpot(self)
             self.c24vumeter = C24vumeter(self)
             self.c24buttonled = C24buttonled(self.desk, self)
             self.c24automode = C24automode(self.desk, self)
+
+        # Place a VU meter on virtual tracks above 24, these are bus VUs
+        if self.track_number >= self.desk.channels and self.track_number <= self.desk.channels + self.desk.busvus:
+            self.c24vumeter = C24vumeter(self)
 
         if self.track_number == 28:
             self.c24vpot = C24jpot(self)
@@ -511,7 +517,9 @@ class C24vumeter(C24base):
     # 0xf0, 0x13, 0x01 = display
     # 0x10 - VUs
     # 0-23 Left
-    # 32-  Right
+    # 32-55  Right
+    # 24-> bus left
+    # 56-> bus right
     # 0x00 MSB
     # 0x00 LSB
     # 0xf7 terminator

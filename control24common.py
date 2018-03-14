@@ -45,7 +45,6 @@ DEFAULTS = {
                 '%(threadName)s\t%(funcName)s\t%(lineno)d\t%(message)s'
 }
 
-CHANNELS = 24
 FADER_RANGE = 2**10
 FADER_STEP = 1 / float(FADER_RANGE)
 
