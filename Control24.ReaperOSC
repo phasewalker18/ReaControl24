@@ -69,7 +69,8 @@ TRACK_PAN n/track/c24vpot/@ s/track/c24scribstrip/pan/@
 TRACK_VU_L n/track/c24vumeter/0/@
 TRACK_VU_R n/track/c24vumeter/1/@
 
-
+MASTER_VU_L n/track/c24vumeter/0/25
+MASTER_VU_R n/track/c24vumeter/1/25
 
 TRACK_SEND_VOLUME s/track/c24scribstrip/send/volume/@
 
@@ -124,10 +125,45 @@ MIDILISTACTION i/midilistaction t/midilistaction/@
 #ACTION_RELATIVE f/action/974/cc/relative
  
 # Experimental
-MASTER_VU_L n/track/c24vumeter/0/25
-MASTER_VU_R n/track/c24vumeter/1/25
-
-REGION_NAME s/track/c24scribstrip/name/30
-MARKER_NAME s/track/c24scribstrip/name/31
-
 MASTER_PAN s/track/c24scribstrip/pan/30
+
+MARKER_NAME s/track/c24scribstrip/mna/31
+MARKER_NUMBER s/track/c24scribstrip/mnu/31
+REGION_NAME s/track/c24scribstrip/rna/31
+REGION_NUMBER s/track/c24scribstrip/rnu/31
+LAST_MARKER_NAME s/track/c24scribstrip/lmna/31
+LAST_MARKER_NUMBER s/track/c24scribstrip/lmnu/31
+LAST_REGION_NAME s/track/c24scribstrip/lrna/31
+LAST_REGION_NUMBER s/track/c24scribstrip/lrnu/31
+
+TRACK_PAN2 s/track/c24scribstrip/tp2/30
+TRACK_PAN_MODE s/track/c24scribstrip/tpm/30
+
+TRACK_SEND_NAME s/track/c24scribstrip/tsn/30
+TRACK_SEND_VOLUME s/track/c24scribstrip/tsv/30
+TRACK_SEND_PAN s/track/c24scribstrip/tsp/30
+
+TRACK_RECV_NAME s/track/c24scribstrip/trn/30
+TRACK_RECV_VOLUME s/track/c24scribstrip/trv/30
+TRACK_RECV_PAN s/track/c24scribstrip/trp/30
+
+TRACK_AUTO s/track/c24scribstrip/auto/30
+FX_NAME s/track/c24scribstrip/fxna/30
+FX_NUMBER s/track/c24scribstrip/fxnu/30
+
+FX_PRESET s/track/c24scribstrip/fxpr/30
+
+FX_PARAM_NAME s/track/c24scribstrip/fxpna/30
+FX_PARAM_VALUE s/track/c24scribstrip/fxpva/30
+
+FX_INST_NAME s/track/c24scribstrip/fxinstn/30
+FX_INST_PRESET s/track/c24scribstrip/fxinstp/30
+FX_INST_PARAM_NAME s/track/c24scribstrip/fxinstpn/30
+FX_INST_PARAM_VALUE s/track/c24scribstrip/fxinstpv/30
+
+LAST_TOUCHED_FX_TRACK_NAME s/track/c24scribstrip/ltfxtn/31
+LAST_TOUCHED_FX_TRACK_NUMBER s/track/c24scribstrip/ltfxtnu/31
+LAST_TOUCHED_FX_NAME s/track/c24scribstrip/ltfxn/31
+LAST_TOUCHED_FX_NUMBER s/track/c24scribstrip/ltfxnu/31
+LAST_TOUCHED_FX_PARAM_NAME s/track/c24scribstrip/ltfxpn/31
+LAST_TOUCHED_FX_PARAM_VALUE s/track/c24scribstrip/ltfxpv/31
