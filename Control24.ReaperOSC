@@ -69,8 +69,7 @@ TRACK_PAN n/track/c24vpot/@ s/track/c24scribstrip/pan/@
 TRACK_VU_L n/track/c24vumeter/0/@
 TRACK_VU_R n/track/c24vumeter/1/@
 
-MASTER_VU_L n/track/c24vumeter/0/25
-MASTER_VU_R n/track/c24vumeter/1/25
+
 
 TRACK_SEND_VOLUME s/track/c24scribstrip/send/volume/@
 
@@ -124,3 +123,8 @@ MIDILISTACTION i/midilistaction t/midilistaction/@
 #works
 #ACTION_RELATIVE f/action/974/cc/relative
  
+# Experimental
+MASTER_VU_L n/track/c24vumeter/0/25
+MASTER_VU_R n/track/c24vumeter/1/25
+
+LAST_TOUCHED_FX_NAME s/track/c24scribstrip/name/25
