@@ -155,16 +155,16 @@ FX_NUMBER s/track/c24scribstrip/fxnu/30
 FX_PRESET s/track/c24scribstrip/fxpr/30
 
 FX_PARAM_NAME s/track/c24scribstrip/fxpna/30
-FX_PARAM_VALUE s/track/c24scribstrip/fxpva/30
+FX_PARAM_VALUE s/track/c24scribstrip/fxpva/31
 
 FX_INST_NAME s/track/c24scribstrip/fxinstn/30
-FX_INST_PRESET s/track/c24scribstrip/fxinstp/30
+FX_INST_PRESET s/track/c24scribstrip/fxinstp/31
 FX_INST_PARAM_NAME s/track/c24scribstrip/fxinstpn/30
-FX_INST_PARAM_VALUE s/track/c24scribstrip/fxinstpv/30
+FX_INST_PARAM_VALUE s/track/c24scribstrip/fxinstpv/31
 
-LAST_TOUCHED_FX_TRACK_NAME s/track/c24scribstrip/ltfxtn/31
+LAST_TOUCHED_FX_TRACK_NAME s/track/c24scribstrip/ltfxtn/30
 LAST_TOUCHED_FX_TRACK_NUMBER s/track/c24scribstrip/ltfxtnu/31
-LAST_TOUCHED_FX_NAME s/track/c24scribstrip/ltfxn/31
+LAST_TOUCHED_FX_NAME s/track/c24scribstrip/ltfxn/30
 LAST_TOUCHED_FX_NUMBER s/track/c24scribstrip/ltfxnu/31
-LAST_TOUCHED_FX_PARAM_NAME s/track/c24scribstrip/ltfxpn/31
+LAST_TOUCHED_FX_PARAM_NAME s/track/c24scribstrip/ltfxpn/30
 LAST_TOUCHED_FX_PARAM_VALUE s/track/c24scribstrip/ltfxpv/31
