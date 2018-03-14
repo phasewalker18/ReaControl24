@@ -346,7 +346,7 @@ class C24track(C24base):
             # as it physically belongs there
             self.desk.c24jpot = self.c24vpot
 
-        if self.track_number <= self.desk.channels or self.track_number in range(25, 27):
+        if self.track_number <= self.desk.channels or self.track_number in range(25, 32):
             self.c24scribstrip = C24scribstrip(self)
 
 
