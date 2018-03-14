@@ -583,8 +583,9 @@ class C24vumeter(C24base):
 class C24scribstrip(C24base):
     """Class to hold and convert scribblestrip value representations"""
     # 0xf0, 0x13, 0x01 = Displays
-    # 0x40, 0x17       = Scribble strip
+    # 0x40      = Scribble strip
     # 0x00             = track/strip
+    # 0x00      = ?
     # 0x00, 0x00, 0x00, 0x00 = 4 'ascii' chars to display
     # 0xf7             = terminator
 
