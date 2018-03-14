@@ -124,8 +124,24 @@ MIDILISTACTION i/midilistaction t/midilistaction/@
 #works
 #ACTION_RELATIVE f/action/974/cc/relative
  
-# Experimental
+# Looking good
 MASTER_PAN s/track/c24scribstrip/pan/30
+LAST_TOUCHED_FX_PARAM_NAME s/track/c24scribstrip/ltfxpn/30
+LAST_TOUCHED_FX_PARAM_VALUE s/track/c24scribstrip/ltfxpv/31
+
+# Looking odd
+#Says 'balance' etc. when pan has 2 knobs
+#TRACK_PAN2 s/track/c24scribstrip/pan2/@
+
+#Needs the send number 
+#TRACK_SEND_NAME s/track/c24scribstrip/send_name/@
+#TRACK_SEND_VOLUME s/track/c24scribstrip/name/@
+#TRACK_SEND_PAN s/track/c24scribstrip/send_pan/@
+#TRACK_RECV_NAME s/track/c24scribstrip/recv_name/@
+#TRACK_RECV_VOLUME s/track/c24scribstrip/rec_name/@
+#TRACK_RECV_PAN s/track/c24scribstrip/recv_pan/@
+
+# Experimental
 
 MARKER_NAME s/track/c24scribstrip/mna/30
 MARKER_NUMBER s/track/c24scribstrip/mnu/31
@@ -136,35 +152,27 @@ LAST_MARKER_NUMBER s/track/c24scribstrip/lmnu/31
 LAST_REGION_NAME s/track/c24scribstrip/lrna/30
 LAST_REGION_NUMBER s/track/c24scribstrip/lrnu/31
 
-TRACK_PAN2 s/track/c24scribstrip/pan2/@
-TRACK_PAN_MODE s/track/c24scribstrip/pan2/@
 
-TRACK_SEND_NAME s/track/c24scribstrip/send_name/@
-TRACK_SEND_VOLUME s/track/c24scribstrip/name/@
-TRACK_SEND_PAN s/track/c24scribstrip/send_pan/@
+TRACK_PAN_MODE s/track/c24scribstrip/pan_mode/@
 
-TRACK_RECV_NAME s/track/c24scribstrip/recv_name/@
-TRACK_RECV_VOLUME s/track/c24scribstrip/rec_name/@
-TRACK_RECV_PAN s/track/c24scribstrip/recv_pan/@
+
 
 TRACK_AUTO s/track/c24scribstrip/auto/@
 
-FX_NAME s/track/c24scribstrip/fxna/30
-FX_NUMBER s/track/c24scribstrip/fxnu/30
+FX_NAME s/track/c24scribstrip/fxna/@
+FX_NUMBER s/track/c24scribstrip/fxnu/@
 
-FX_PRESET s/track/c24scribstrip/fxpr/30
+FX_PRESET s/track/c24scribstrip/fxpr/@
 
-FX_PARAM_NAME s/track/c24scribstrip/fxpna/30
-FX_PARAM_VALUE s/track/c24scribstrip/fxpva/31
+FX_PARAM_NAME s/track/c24scribstrip/fxpna/@
+FX_PARAM_VALUE s/track/c24scribstrip/fxpva/@
 
-FX_INST_NAME s/track/c24scribstrip/fxinstn/30
-FX_INST_PRESET s/track/c24scribstrip/fxinstp/31
-FX_INST_PARAM_NAME s/track/c24scribstrip/fxinstpn/30
-FX_INST_PARAM_VALUE s/track/c24scribstrip/fxinstpv/31
+FX_INST_NAME s/track/c24scribstrip/fxinstn/@
+FX_INST_PRESET s/track/c24scribstrip/fxinstp/@
+FX_INST_PARAM_NAME s/track/c24scribstrip/fxinstpn/@
+FX_INST_PARAM_VALUE s/track/c24scribstrip/fxinstpv/@
 
 LAST_TOUCHED_FX_TRACK_NAME s/track/c24scribstrip/ltfxtn/30
 LAST_TOUCHED_FX_TRACK_NUMBER s/track/c24scribstrip/ltfxtnu/31
 LAST_TOUCHED_FX_NAME s/track/c24scribstrip/ltfxn/30
 LAST_TOUCHED_FX_NUMBER s/track/c24scribstrip/ltfxnu/31
-LAST_TOUCHED_FX_PARAM_NAME s/track/c24scribstrip/ltfxpn/30
-LAST_TOUCHED_FX_PARAM_VALUE s/track/c24scribstrip/ltfxpv/31
