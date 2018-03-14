@@ -361,7 +361,8 @@ MAPPING_TREE = {
                                 'Address': 'Mix',
                                 'Zone': 'Window',
                                 'LED': True,
-                                'Toggle': True
+                                'Toggle': True,
+                                'CmdClass': 'C24buttonled'
                             },
                             0x01: {
                                 'Address': 'Edit-Bypass',

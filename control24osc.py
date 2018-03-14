@@ -188,6 +188,7 @@ class C24base(object):
             if tbyt is None:
                 tbyt = item.get('TrackByte')
             led = item.get('LED')
+            tog = item.get('Toggle')
             if not kids is None:
                 kidbyts = list(mybyts)
                 kidbyts[cbyt] = key
@@ -199,6 +200,8 @@ class C24base(object):
                     opr = {
                         'cmdbytes': leafbyts
                     }
+                    if tog:
+                        opr['Toggle'] = tog
                     if not tbyt is None:
                         opr['TrackByte'] = tbyt
                     outp[path + '/' + addr] = opr
@@ -979,10 +982,16 @@ class C24buttonled(C24base):
         self.desk = desk
         self.track = track
         self.cmdbytes = (c_ubyte * 3)()
+        self.states = {}
 
     def c_d(self, addrlist, stuff):
         addr = '/'.join(addrlist)
         val = stuff[0]
+        self.set_btn(addr, val)
+
+    def d_c(self, parsedcmd):
+        addr = parsedcmd.get('address')
+        val = parsedcmd.get('Value')
         self.set_btn(addr, val)
 
     def set_btn(self, addr, val):
@@ -993,19 +1002,37 @@ class C24buttonled(C24base):
                 tbyt = lkpbtn.get('TrackByte')
             else:
                 tbyt = None
-            # Copy the byte sequence injecting track number
-            for ind, byt in enumerate(lkpbtn['cmdbytes']):
-                c_byt = c_ubyte(byt)
-                if ind == tbyt and not self.track is None:
-                    c_byt.value = c_byt.value | self.track.track_number
-                # On or Off
-                if ind == 2 and val == 1:
-                    c_byt.value = c_byt.value | 0x40
-                self.cmdbytes[ind] = c_byt
-            LOG.debug("Button LED cmdbytes: %s", binascii.hexlify(self.cmdbytes))
-            self.desk.c24_client_send(self.cmdbytes)
+            tog = lkpbtn.get('Toggle')
+            if (tog and val==1) or not tog:
+                if tog:
+                    val = self.toggle_state(addr)
+                # Copy the byte sequence injecting track number
+                for ind, byt in enumerate(lkpbtn['cmdbytes']):
+                    c_byt = c_ubyte(byt)
+                    if ind == tbyt and not self.track is None:
+                        c_byt.value = c_byt.value | self.track.track_number
+                    # On or Off
+                    if ind == 2 and val == 1:
+                        c_byt.value = c_byt.value | 0x40
+                    self.cmdbytes[ind] = c_byt
+                LOG.debug("Button LED cmdbytes: %s", binascii.hexlify(self.cmdbytes))
+                self.desk.c24_client_send(self.cmdbytes)
         except KeyError:
             LOG.warn("OSCServer LED not found: %s %s", addr, str(val))
+
+    def toggle_state(self, addr):
+        state = self.states.get('addr') or 0.0
+        if state == 0.0:
+            state = 1.0
+        else:
+            state = 0.0
+        self.states[addr] = state
+        return state
+
+
+
+
+
 
 class C24automode(C24base):
     """ class to deal with the automation toggle on a track
@@ -1240,21 +1267,18 @@ class C24oscsession(object):
                 else:
                     # NON CLASS based Desk-DAW
                     val = parsed_cmd['Value']
-                    tog = parsed_cmd['Toggle']
-
-                    if (tog and val == 1) or not tog:
-                        if address.startswith('/button/track/'):
-                            # Channel strip buttons.
-                            # We will assume the track object is here already
-                            osc_msg = OSC.OSCMessage(address)
-                            if not osc_msg is None:
-                                self.osc_client_send(osc_msg, val)
-                        # ANY OTHER buttons
-                        # If the Reaper.OSC file has something at this address
-                        elif address.startswith('/button'):
-                            osc_msg = OSC.OSCMessage(address)
-                            if not osc_msg is None:
-                                self.osc_client_send(osc_msg, val)
+                    if address.startswith('/button/track/'):
+                        # Channel strip buttons.
+                        # We will assume the track object is here already
+                        osc_msg = OSC.OSCMessage(address)
+                        if not osc_msg is None:
+                            self.osc_client_send(osc_msg, val)
+                    # ANY OTHER buttons
+                    # If the Reaper.OSC file has something at this address
+                    elif address.startswith('/button'):
+                        osc_msg = OSC.OSCMessage(address)
+                        if not osc_msg is None:
+                            self.osc_client_send(osc_msg, val)
 
     def _daw_to_desk(self, addr, tags, stuff, source):
         """message handler for the OSC listener"""
