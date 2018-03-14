@@ -337,7 +337,7 @@ class C24track(C24base):
             self.c24automode = C24automode(self.desk, self)
 
         # Place a VU meter on virtual tracks above 24, these are bus VUs
-        if self.track_number >= self.desk.channels and self.track_number <=  + self.desk.busvus:
+        if self.track_number >= self.desk.channels and self.track_number <= self.desk.channels + self.desk.busvus:
             self.c24vumeter = C24vumeter(self)
 
         if self.track_number == 28:
