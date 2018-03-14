@@ -360,7 +360,8 @@ MAPPING_TREE = {
                             0x00: {
                                 'Address': 'Mix',
                                 'Zone': 'Window',
-                                'LED': True
+                                'LED': True,
+                                'Toggle': True
                             },
                             0x01: {
                                 'Address': 'Edit-Bypass',

@@ -1239,18 +1239,22 @@ class C24oscsession(object):
                     inst.d_c(parsed_cmd)
                 else:
                     # NON CLASS based Desk-DAW
-                    if address.startswith('/button/track/'):
-                        # Channel strip buttons.
-                        # We will assume the track object is here already
-                        osc_msg = OSC.OSCMessage(address)
-                        if not osc_msg is None:
-                            self.osc_client_send(osc_msg, parsed_cmd['Value'])
-                    # ANY OTHER buttons
-                    # If the Reaper.OSC file has something at this address
-                    elif address.startswith('/button'):
-                        osc_msg = OSC.OSCMessage(address)
-                        if not osc_msg is None:
-                            self.osc_client_send(osc_msg, parsed_cmd['Value'])
+                    val = parsed_cmd['Value']
+                    tog = parsed_cmd['Toggle']
+
+                    if (tog and val == 1) or not tog:
+                        if address.startswith('/button/track/'):
+                            # Channel strip buttons.
+                            # We will assume the track object is here already
+                            osc_msg = OSC.OSCMessage(address)
+                            if not osc_msg is None:
+                                self.osc_client_send(osc_msg, parsed_cmd['Value'])
+                        # ANY OTHER buttons
+                        # If the Reaper.OSC file has something at this address
+                        elif address.startswith('/button'):
+                            osc_msg = OSC.OSCMessage(address)
+                            if not osc_msg is None:
+                                self.osc_client_send(osc_msg, parsed_cmd['Value'])
 
     def _daw_to_desk(self, addr, tags, stuff, source):
         """message handler for the OSC listener"""
