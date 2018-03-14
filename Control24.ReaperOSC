@@ -127,27 +127,28 @@ MIDILISTACTION i/midilistaction t/midilistaction/@
 # Experimental
 MASTER_PAN s/track/c24scribstrip/pan/30
 
-MARKER_NAME s/track/c24scribstrip/mna/31
+MARKER_NAME s/track/c24scribstrip/mna/30
 MARKER_NUMBER s/track/c24scribstrip/mnu/31
-REGION_NAME s/track/c24scribstrip/rna/31
+REGION_NAME s/track/c24scribstrip/rna/30
 REGION_NUMBER s/track/c24scribstrip/rnu/31
-LAST_MARKER_NAME s/track/c24scribstrip/lmna/31
+LAST_MARKER_NAME s/track/c24scribstrip/lmna/30
 LAST_MARKER_NUMBER s/track/c24scribstrip/lmnu/31
-LAST_REGION_NAME s/track/c24scribstrip/lrna/31
+LAST_REGION_NAME s/track/c24scribstrip/lrna/30
 LAST_REGION_NUMBER s/track/c24scribstrip/lrnu/31
 
-TRACK_PAN2 s/track/c24scribstrip/tp2/30
-TRACK_PAN_MODE s/track/c24scribstrip/tpm/30
+TRACK_PAN2 s/track/c24scribstrip/pan2/@
+TRACK_PAN_MODE s/track/c24scribstrip/pan2/@
 
-TRACK_SEND_NAME s/track/c24scribstrip/tsn/30
-TRACK_SEND_VOLUME s/track/c24scribstrip/tsv/30
-TRACK_SEND_PAN s/track/c24scribstrip/tsp/30
+TRACK_SEND_NAME s/track/c24scribstrip/send_name/@
+TRACK_SEND_VOLUME s/track/c24scribstrip/name/@
+TRACK_SEND_PAN s/track/c24scribstrip/send_pan/@
 
-TRACK_RECV_NAME s/track/c24scribstrip/trn/30
-TRACK_RECV_VOLUME s/track/c24scribstrip/trv/30
-TRACK_RECV_PAN s/track/c24scribstrip/trp/30
+TRACK_RECV_NAME s/track/c24scribstrip/recv_name/@
+TRACK_RECV_VOLUME s/track/c24scribstrip/rec_name/@
+TRACK_RECV_PAN s/track/c24scribstrip/recv_pan/@
 
-TRACK_AUTO s/track/c24scribstrip/auto/30
+TRACK_AUTO s/track/c24scribstrip/auto/@
+
 FX_NAME s/track/c24scribstrip/fxna/30
 FX_NUMBER s/track/c24scribstrip/fxnu/30
 
