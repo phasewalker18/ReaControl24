@@ -6,8 +6,12 @@ import logging
 import optparse
 import os
 import time
+import sys
 
 import netifaces
+
+if sys.platform.startswith('win'):
+    import _winreg as wr    #pylint: disable=E0401
 
 '''
     This file is part of ReaControl24. Control Surface Middleware.
@@ -118,41 +122,126 @@ def opts_common(desc):
     return oprs
 
 
-def format_ip(ipaddr, port):
-    """from ip and port provide a string with ip:port"""
-    return '{}:{}'.format(ipaddr, port)
-
-
-def ipv4(interface_name=None):
-    """ Get an IPv4 address plausible default. """
-    # to not take into account loopback addresses (no interest here)
-    ifaces = netifaces.interfaces()
-    default_interface = DEFAULTS.get('interface')
-    default_address = DEFAULTS.get('ip')
-    found = False
-    if not interface_name is None and not interface_name in ifaces:
-        raise KeyError('%s is not a valid interface name' % interface_name)
-    for interface in ifaces:
-        if interface_name is None or unicode(interface_name) == interface:
-            config = netifaces.ifaddresses(interface)
-            # AF_INET is not always present
-            if netifaces.AF_INET in config.keys():
-                for link in config[netifaces.AF_INET]:
-                    # loopback holds a 'peer' instead of a 'broadcast' address
-                    if 'addr' in link.keys() and 'peer' not in link.keys():
-                        default_interface = interface
-                        default_address = link['addr']
-                        found = True
-                        break
-
-    if not interface_name is None and not found:
-        raise LookupError(
-            '%s interface has no ipv4 addresses' % interface_name)
-
-    return default_interface, default_address
 
 def hexl(inp):
     """Convert to hex string using binascii but
     then pretty it up by spacing the groups"""
     shex = binascii.hexlify(inp)
     return ' '.join([shex[i:i+2] for i in range(0, len(shex), 2)])
+
+
+
+class NetworkHelper(object):
+    """class to contain network related helpful methods
+    and such to be re-used where needed"""
+    def __init__(self):
+        self.networks = NetworkHelper.list_networks()
+
+    def __str__(self):
+        """return a nice list"""
+        return '\n'.join(['{} {}'.format(key, data.get('name') or '') for key, data in self.networks.iteritems()])
+
+    def get_default(self):
+        """return the name and first ip of whichever adapter
+        is marked as default"""
+        default = [key for key, data in self.networks.iteritems() if data.has_key('default')]
+        if default:
+            def_net = default[0]
+            def_ip = self.networks[def_net].get('ip')[0].get('addr')
+            return def_net, def_ip
+        return None
+
+    def get(self, name):
+        """get the full entry for a network by name
+        but also look by friendly name if not an adapter name"""
+        if self.networks.has_key(name):
+            return self.networks[name]
+        results = [key for key, data in self.networks.iteritems() if data.get('name') == name]
+        if results:
+            return self.networks[results[0]]
+        return None
+
+    def verify_ip(self, ipstr):
+        """search for an adapter that has the ip address supplied"""
+        for key, data in self.networks.iteritems():
+            if data.has_key('ip'):
+                for ip in data['ip']:
+                    if ip.get('addr') == ipstr:
+                        return key
+        return None
+
+    @staticmethod
+    def get_ip_address(ifname):
+        """Use netifaces to retrieve ip address, but handle if it doesn't exist"""
+        try:
+            addr_l = netifaces.ifaddresses(ifname)[netifaces.AF_INET]
+            return [{k: v.encode('ascii', 'ignore') for k, v in addr.iteritems()} for addr in addr_l]
+        except KeyError:
+            return None
+    
+    @staticmethod
+    def get_mac_address(ifname):
+        """Use netifaces to retrieve mac address, but handle if it doesn't exist"""
+        try:
+            addr_l = netifaces.ifaddresses(ifname)[netifaces.AF_LINK]
+            addr = addr_l[0].get('addr')
+            return addr.encode('ascii', 'ignore')
+        except KeyError:
+            return None
+
+    @staticmethod
+    def list_networks_win(networks):
+        """Windows shim for list_networks. Also go to the registry to
+        get a friendly name"""
+        reg = wr.ConnectRegistry(None, wr.HKEY_LOCAL_MACHINE)
+        reg_key = wr.OpenKey(
+            reg,
+            r'SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}'
+            )
+        for key, val in networks.iteritems():
+            val['pcapname'] = '\\Device\\NPF_{}'.format(key)
+            net_regkey = r'{}\Connection'.format(key)
+            try:
+                net_key = wr.OpenKey(reg_key, net_regkey)
+                net_name = wr.QueryValueEx(net_key, 'Name')[0]
+                if net_name:
+                    val['name'] = net_name
+            except WindowsError: #pylint: disable=E0602
+                pass
+        wr.CloseKey(reg_key)
+        return networks
+
+    @staticmethod
+    def list_networks():
+        """Gather networks info via netifaces library"""
+        default_not_found = True
+        names = [a.encode('ascii', 'ignore') for a in netifaces.interfaces()]
+        results = {}
+        for interface in names:
+            inner = {
+                'pcapname': interface,
+                'mac': NetworkHelper.get_mac_address(interface)
+                }
+            #ip
+            ips = NetworkHelper.get_ip_address(interface)
+            if ips:
+                inner['ip'] = ips
+                if default_not_found and any([ip.has_key('addr') and not ip.has_key('peer') for ip in ips]):
+                    default_not_found = False
+                    inner['default'] = True
+            results[interface] = inner
+        if sys.platform.startswith('win'):
+            return NetworkHelper.list_networks_win(results)
+        return results
+
+    @staticmethod
+    def ipstr_to_tuple(ipstr):
+        ipsplit = ipstr.split(':')
+        return (ipsplit[0], int(ipsplit[1]))
+    
+    @staticmethod
+    def ipstr_from_tuple(ipaddr, ipport):
+        """from ip and port provide a string with ip:port"""
+        return '{}:{}'.format(ipaddr, ipport)
+
+

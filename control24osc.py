@@ -12,20 +12,12 @@ import threading
 import time
 from ctypes import c_ubyte
 from multiprocessing.connection import Client
+from optparse import OptionError
 
 import OSC
 
-from control24common import (
-    DEFAULTS,
-    CHANNELS,
-    FADER_RANGE,
-    start_logging,
-    tick,
-    ipv4,
-    opts_common,
-    format_ip
-)
-
+from control24common import (CHANNELS, DEFAULTS, FADER_RANGE, NetworkHelper,
+                             opts_common, start_logging, tick)
 from control24map import MAPPING_TREE
 
 '''
@@ -60,13 +52,9 @@ TIMING_FADER_ECHO = 0.1
 SESSION = None
 # Globals
 LOG = None
-TESTSIGNAL = None
-#TESTSIGNAL=''.join([chr(n) for n in range(0,104)])
 
 # Control24 functions
 # Split command list on repeats of the same starting byte or any instance of the F7 byte
-
-
 
 def findintree(obj, key):
     #TODO see if this will save having to
@@ -78,14 +66,12 @@ def findintree(obj, key):
             if item is not None:
                 return item
 
-
-
 # Housekeeping functions
 def signal_handler(sig, stackframe):
     """Exit the daemon if a signal is received"""
     signals_dict = dict((getattr(signal, n), n)
                         for n in dir(signal) if n.startswith('SIG') and '_' not in n)
-    LOG.info("daemon shutting down as %s received.", signals_dict[sig])
+    LOG.info("control24osc shutting down as %s received.", signals_dict[sig])
     if not SESSION is None:
         SESSION.close()
     sys.exit(0)
@@ -1150,8 +1136,13 @@ class C24oscsession(object):
             level = level + 1
             lkp = lkp.get(this_byte)
             if not lkp:
-                raise LookupError(
-                    'Level %d byte not found in MAPPING_TREE: %02x' % (level, this_byte))
+                LOG.warn(
+                    'Level %d byte not found in MAPPING_TREE: %02x. New mapping needed for sequence %s',
+                    level,
+                    this_byte,
+                    cmdbytes
+                    )   
+                return None
             # Copy this level's dict entries but not the children subdict. i.e. flatten/accumulate
             if "Address" in lkp:
                 parsedcmd["addresses"].append('/')
@@ -1302,7 +1293,7 @@ class C24oscsession(object):
                     # Connection refused
                     if exc[0] == 61:
                         LOG.error(
-                            'Error trying to connect to control24d at %s. May not be running. Will try again.', self.server, exc_info=True)
+                            'Error trying to connect to control24d at %s. May not be running. Will try again.', self.server)
                         time.sleep(TIMING_SERVER_POLL)
                     else:
                         LOG.error(
@@ -1319,7 +1310,7 @@ class C24oscsession(object):
                     datarecv = self.c24_client.recv_bytes()
                     self._desk_to_daw(datarecv)
                 except EOFError:
-                    LOG.error('MP Client EOFError')
+                    LOG.error('MP Client EOFError: Daemon closed communication.')
                     self.c24_client_is_connected = False
                     self.c24_client = None
                     time.sleep(TIMING_SERVER_POLL)
@@ -1342,8 +1333,11 @@ class C24oscsession(object):
             LOG.debug('Starting OSC Listener at %s', self.listen)
             try:
                 self.osc_listener.serve_forever()
-            except Exception:
-                LOG.error("OSC Listener error", exc_info=True)
+            except Exception as exc:
+                if exc[0] == 9:
+                    LOG.debug("OSC shutdown error", exc_info=True)
+                else:
+                    LOG.error("OSC Listener error", exc_info=True)
                 #raise
             LOG.debug('OSC Listener stopped')
             time.sleep(TIMING_OSC_LISTENER_RESTART)
@@ -1373,7 +1367,7 @@ class C24oscsession(object):
                 try:
                     self.osc_client.send(testmsg)
                 except OSC.OSCClientError:
-                    LOG.error("Sending Test message got an error", exc_info=True)
+                    LOG.error("Sending Test message got an error. DAW is no longer reponding.")
                     self._disconnect_osc_client()
                 except Exception:
                     LOG.error("OSC Client Unhandled exception", exc_info=True)
@@ -1414,7 +1408,7 @@ class C24oscsession(object):
             self.c24_client.send_bytes(cmdbytes)
 
     # session housekeeping methods
-    def __init__(self, opts):
+    def __init__(self, opts, networks):
         """Contructor to build the client session object"""
         global LOG
         LOG = start_logging('control24osc', opts.logdir, opts.debug)
@@ -1479,29 +1473,30 @@ class C24oscsession(object):
 
 # START main program
 def main():
-    """Main function declares options and initialisation routine for daemon."""
-    default_ip = ipv4()[1]
+    """Main function declares options and initialisation routine for OSC client."""
     global SESSION
 
+    # Find networks on this machine, to determine good defaults
+    # and help verify options
+    networks = NetworkHelper()
 
-
-
+    default_ip = networks.get_default()[1]
 
     # program options
     oprs = opts_common("control24osc Control24 OSC client")
-    default_daemon = format_ip(default_ip, DEFAULTS.get('daemon'))
+    default_daemon = networks.ipstr_from_tuple(default_ip, DEFAULTS.get('daemon'))
     oprs.add_option(
         "-s",
         "--server",
         dest="server",
         help="connect to control24d at given host:port. default %s" % default_daemon)
-    default_osc_client24 = format_ip(default_ip, DEFAULTS.get('control24osc'))
+    default_osc_client24 = networks.ipstr_from_tuple(default_ip, DEFAULTS.get('control24osc'))
     oprs.add_option(
         "-l",
         "--listen",
         dest="listen",
         help="accept OSC client from DAW at host:port. default %s" % default_osc_client24)
-    default_daw = format_ip(default_ip, DEFAULTS.get('oscDaw'))
+    default_daw = networks.ipstr_from_tuple(default_ip, DEFAULTS.get('oscDaw'))
     oprs.add_option(
         "-c",
         "--connect",
@@ -1511,16 +1506,19 @@ def main():
     oprs.set_defaults(listen=default_osc_client24,
                       server=default_daemon, connect=default_daw)
 
-    # Parse args
+    # Parse and verify options
+    # TODO move to argparse and use that to verify
     (opts, args) = oprs.parse_args()
+    if not networks.verify_ip(opts.listen.split(':')[0]):
+        raise OptionError('No network has the IP address specified.', 'listen')
 
     # Set up Interrupt signal handler so process can close cleanly
-    for sig in [signal.SIGINT, signal.SIGHUP]:
+    for sig in [signal.SIGINT]:
         signal.signal(sig, signal_handler)
 
     # Build the session
     if SESSION is None:
-        SESSION = C24oscsession(opts)
+        SESSION = C24oscsession(opts, networks)
 
     # an OSC testing message
     testmsg = OSC.OSCMessage('/print')
@@ -1529,9 +1527,6 @@ def main():
     # Main Loop once session initiated
     while True:
         time.sleep(TIMING_MAIN_LOOP)
-        if not TESTSIGNAL is None:
-            SESSION.desk.long_scribble(TESTSIGNAL)
-
 
 if __name__ == '__main__':
     main()
