@@ -45,6 +45,11 @@ DEFAULTS = {
                 '%(threadName)s\t%(funcName)s\t%(lineno)d\t%(message)s'
 }
 
+COMMANDS = {
+    'ack': 0xA0,
+    'online': 0xE2
+}
+
 CHANNELS = 24
 FADER_RANGE = 2**10
 FADER_STEP = 1 / float(FADER_RANGE)
@@ -139,7 +144,10 @@ class NetworkHelper(object):
 
     def __str__(self):
         """return a nice list"""
-        return '\n'.join(['{} {}'.format(key, data.get('name') or '') for key, data in self.networks.iteritems()])
+        return '\n'.join(['{} {}'.format(
+            key,
+            data.get('name') or '')
+            for key, data in self.networks.iteritems()])
 
     def get_default(self):
         """return the name and first ip of whichever adapter
