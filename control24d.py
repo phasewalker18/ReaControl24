@@ -410,7 +410,7 @@ class C24session(object):
                 self.ethheader.macdest = self.mac_control24
                 # initialise the desk by sending the init command
                 # and wiping the clock display
-                init1 = self._prepare_packetr(None, 0, 0, c24cmd=COMMANDS['init'])
+                init1 = self._prepare_packetr(None, 0, 0, c24cmd=COMMANDS['online'])
                 init2data = (c_ubyte * 15)(0xF0, 0x13, 0x01, 0x30, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf7)
                 init2 = self._prepare_packetr(init2data, 15, 1, (c_ubyte * 2)(0x02, 0x44))
                 self.send_packet(init1)
