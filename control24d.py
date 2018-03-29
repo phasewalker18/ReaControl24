@@ -230,7 +230,7 @@ def c24packet_factory(prm_tot_len=None, prm_data_len=None):
         def to_buffer(self):
             """Provide the raw packet contents as a string buffer"""
             memaddr = addressof(self)
-            sendbuf = string_at(memaddr, self.pkt_len)
+            sendbuf = string_at(memaddr, self.pkt_tot_len)
             return sendbuf
 
         def is_broadcast(self):
