@@ -494,7 +494,8 @@ class C24session(object):
         pcp.struc.c24header.unknown1 = parity
         if c24cmd:
             pcp.struc.c24header.c24cmd = c24cmd
-        pcp.struc.packetdata = pkt_data or (c_ubyte() * 0)()
+        if pkt_data_len > 0:
+            pcp.struc.packetdata = pkt_data
         pcp.struc.numcommands = ncmds
         if c24cmd == self.c24cmds['ack']:
             pcp.struc.c24header.cmdcounter = self.cmdcounter
