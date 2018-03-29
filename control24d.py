@@ -501,7 +501,7 @@ class C24session(object):
             pcp.struc.c24header.sendcounter = self.sendcounter
         return pcp
 
-    def _prepare_keepalive(self):
+    def prepare_keepalive(self):
         """session wrapper around keepalive packet"""
         keepalivedata = (c_ubyte * 1)()
         keepalive = self._prepare_packetr(keepalivedata, 1, 1)
