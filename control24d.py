@@ -217,7 +217,7 @@ def c24packet_factory(prm_tot_len=None, prm_data_len=None):
 
         def __init__(self):
             super(C24Packet, self).__init__()
-            self.c24header.numbytes = self.pkt_byt_len
+            self.struc.c24header.numbytes = self.pkt_byt_len
 
         def __str__(self):
             return '{} {} {}'.format(
