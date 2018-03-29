@@ -150,7 +150,7 @@ class C24Header(BigEndianStructure):
     ]
 
     def __str__(self):
-        cmd = COMMANDS[self.c24cmd] or hex(self.c24cmd)
+        cmd = COMMANDS.get(self.c24cmd) or hex(self.c24cmd)
         return 'bytes:{} c_cnt:{} s_cnt:{} retry:{} cmd:{} nc:{}'.format(
             self.numbytes,
             self.cmdcounter,
