@@ -150,12 +150,13 @@ class C24Header(BigEndianStructure):
     ]
 
     def __str__(self):
+        cmd = COMMANDS[self.c24cmd] or hex(self.c24cmd)
         return 'bytes:{} c_cnt:{} s_cnt:{} retry:{} cmd:{} nc:{}'.format(
             self.numbytes,
             self.cmdcounter,
             self.sendcounter,
             self.retry,
-            self.c24cmd,
+            cmd,
             self.numcommands
         )
 
@@ -493,7 +494,7 @@ class C24session(object):
         pcp.struc.c24header.unknown1 = parity
         if c24cmd:
             pcp.struc.c24header.c24cmd = c24cmd
-        pcp.struc.packetdata = pkt_data
+        pcp.struc.packetdata = pkt_data or (c_ubyte() * 0)()
         pcp.struc.numcommands = ncmds
         if c24cmd == self.c24cmds['ack']:
             pcp.struc.c24header.cmdcounter = self.cmdcounter
