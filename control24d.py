@@ -461,8 +461,6 @@ class C24session(object):
             totalwait += TIMING_WAIT_DESC_ACK
             LOG.warn('Waiting for DESK ACK %d', totalwait)
             #TODO implement daw-desk retry packets
-        # This counter increments by number of commands we are sending in this/each packet
-        self.sendcounter += ncmds
         LOG.debug('TODESK CMD %d', self.sendcounter)
         if not self.mac_control24 is None:
             packet = self._prepare_packetr(pkt_data, pkt_data_len, ncmds)
@@ -500,6 +498,8 @@ class C24session(object):
         if c24cmd == self.c24cmds['ack']:
             pcp.struc.c24header.cmdcounter = self.cmdcounter
         else:
+            # This counter increments by number of commands we are sending in this/each packet
+            self.sendcounter += ncmds            
             pcp.struc.c24header.sendcounter = self.sendcounter
         return pcp
 
