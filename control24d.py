@@ -495,12 +495,12 @@ class C24session(object):
             pcp.struc.c24header.c24cmd = c24cmd
         if pkt_data_len > 0:
             pcp.struc.packetdata = pkt_data
-        pcp.struc.numcommands = ncmds
+        pcp.struc.c24header.numcommands = ncmds
         if c24cmd == self.c24cmds['ack']:
             pcp.struc.c24header.cmdcounter = self.cmdcounter
         else:
             # This counter increments by number of commands we are sending in this/each packet
-            self.sendcounter += ncmds            
+            self.sendcounter += ncmds
             pcp.struc.c24header.sendcounter = self.sendcounter
         return pcp
 
