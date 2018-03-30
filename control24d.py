@@ -330,11 +330,11 @@ class ManageListener(threading.Thread):
                             recvbuffer, buffsz)
                         buffsz += incrsz
                         ncmds = 1
-                        while all(
+                        while all([
                                 self.mp_conn.poll(),
                                 ncmds < self.max_cmds_in_packet,
                                 buffsz < self.cmd_buffer_length - 30
-                            ):
+                            ]):
                             incrsz = self.mp_conn.recv_bytes_into(
                                 recvbuffer, buffsz)
                             buffsz += incrsz
@@ -451,7 +451,7 @@ class C24session(object):
                         LOG.warn('FROMDESK unhandled :%02x', packet.struc.packetdata[0])
                         LOG.debug('     unhandled: %s', hexl(packet.raw))
 
-    def _receive_handler(self, buff, ncmds, buffsz):
+    def receive_handler(self, buff, ncmds, buffsz):
         LOG.debug('MP recv: c:%d s:%d d:%s', ncmds, buffsz,
                   hexl(buff[:buffsz]))
         pkt_data_len = buffsz  # len(buff)
@@ -540,7 +540,7 @@ class C24session(object):
         #self.cmdcounter = c_uint32(0)
         # desk-to-daw (cmdcounter) and daw-to-desk (sendcounter)
         self.cmdcounter = 0
-        self.sendcounter = 0
+        self.sendcounter = 1
         self.sendlock = threading.Event()
         self.sendlock.set()
         self.backoff = threading.Timer(TIMING_BACKOFF, self._backoff)
