@@ -476,7 +476,8 @@ class C24session(object):
         """sesion wrapper around pcap_sendpacket
         so we can pass in session and trap error"""
         LOG.debug("Sending Packet of %d bytes: %s", pkt.pkt_tot_len, hexl(pkt.raw))
-        pcap_status = self.pcap_sess.sendpacket(pkt.to_buffer())
+        buf = pkt.to_buffer()
+        pcap_status = self.pcap_sess.sendpacket(buf)
         if pcap_status != pkt.pkt_tot_len:
             LOG.warn("Error sending packet: %s", self.pcap_sess.geterr())
         else:
