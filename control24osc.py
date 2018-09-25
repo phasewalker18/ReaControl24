@@ -10,9 +10,13 @@ import signal
 import sys
 import threading
 import time
+import json
 from ctypes import c_ubyte
 from multiprocessing.connection import Client
+from multiprocessing import Process
 from optparse import OptionError
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from os import curdir, sep
 
 import OSC
 
@@ -52,6 +56,7 @@ TIMING_FADER_ECHO = 0.1
 SESSION = None
 # Globals
 LOG = None
+HTTPD = None
 
 # Control24 functions
 # Split command list on repeats of the same starting byte or any instance of the F7 byte
@@ -60,7 +65,7 @@ def findintree(obj, key):
     #TODO see if this will save having to
     # code button addresses twice
     if key in obj: return obj[key]
-    for k, v in obj.items():
+    for _, v in obj.items():
         if isinstance(v,dict):
             item = findintree(v, key)
             if item is not None:
@@ -72,6 +77,8 @@ def signal_handler(sig, stackframe):
     signals_dict = dict((getattr(signal, n), n)
                         for n in dir(signal) if n.startswith('SIG') and '_' not in n)
     LOG.info("control24osc shutting down as %s received.", signals_dict[sig])
+    if not HTTPD is None:
+        HTTPD.socket.close()
     if not SESSION is None:
         SESSION.close()
     sys.exit(0)
@@ -1470,6 +1477,46 @@ class C24oscsession(object):
         LOG.debug("C24oscsession del")
         self.close()
 
+# classes for the HTTPD request handler
+class CustomEncoder(json.JSONEncoder):
+
+    def without_keys(self, d, keys):
+        return {x: d[x] for x in d if x not in keys}
+
+    def default(self, o):
+        if not isinstance(o, threading.Thread):
+            return {'__{}__'.format(o.__class__.__name__): self.without_keys(o.__dict__,['desk','track'])}
+
+class HttpdGetHandler(BaseHTTPRequestHandler):
+
+	#Handler for the GET requests
+    def do_GET(self):
+        if self.path=="/":
+            self.path="/control24monitor.html"
+            flc = open(curdir + sep + self.path)
+            self.send_response(200)
+            self.send_header('Content-type','text/html')
+            self.end_headers()
+            self.wfile.write(flc.read())
+            flc.close()
+        elif self.path=="/api":
+            response = json.dumps(SESSION.desk, indent=4, cls=CustomEncoder)
+            self.send_response(200)
+            self.send_header('Content-type','appication/json')
+            self.end_headers()
+            self.wfile.write(response)          
+        else:
+            self.send_error(404,'File Not Found: %s' % self.path)
+            self.end_headers()
+
+        return
+
+def httpd_main(address):
+    """Sub Process function for HTTPD"""
+    # TODO use classes as per threads, work out what the right class is
+    HTTPD = HTTPServer(address, HttpdGetHandler)
+		#Wait forever for incoming http requests
+    HTTPD.serve_forever()
 
 # START main program
 def main():
@@ -1485,6 +1532,7 @@ def main():
     # program options
     oprs = opts_common("control24osc Control24 OSC client")
     default_daemon = networks.ipstr_from_tuple(default_ip, DEFAULTS.get('daemon'))
+    default_httpd = DEFAULTS.get('httpd')
     oprs.add_option(
         "-s",
         "--server",
@@ -1502,13 +1550,19 @@ def main():
         "--connect",
         dest="connect",
         help="Connect to DAW OSC server at host:port. default %s" % default_daw)
+    oprs.add_option(
+        "-m",
+        "--httpd",
+        dest="httpd",
+        help="Start a HTTP Server for state and debugging. Specify as port or omit for none. default %s" % default_httpd)
+    
 
     oprs.set_defaults(listen=default_osc_client24,
-                      server=default_daemon, connect=default_daw)
+                      server=default_daemon, connect=default_daw, httpd=default_httpd)
 
     # Parse and verify options
     # TODO move to argparse and use that to verify
-    (opts, args) = oprs.parse_args()
+    (opts, _) = oprs.parse_args()
     if not networks.verify_ip(opts.listen.split(':')[0]):
         raise OptionError('No network has the IP address specified.', 'listen')
 
@@ -1519,6 +1573,13 @@ def main():
     # Build the session
     if SESSION is None:
         SESSION = C24oscsession(opts, networks)
+
+    # If required, launch the httpd process
+    if not opts.httpd is None:
+        address=(opts.listen.split(':')[0], opts.httpd)
+        process = Process(target=httpd_main, args=(address,))
+        process.start()
+        LOG.info('HTTPD started at URL http://{}:{}'.format(*address))
 
     # an OSC testing message
     testmsg = OSC.OSCMessage('/print')

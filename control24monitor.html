@@ -1,0 +1,40 @@
+<html>
+
+<head>
+    <title>ReaControl24 - OSC client monitor</title>
+    <script type="text/javascript">
+        function getFromApi() {
+            fetch('/api')
+                .then(response => {
+                    if (response.ok) {
+                        return Promise.resolve(response);
+                    }
+                    else {
+                        return Promise.reject(new Error('Failed to load'));
+                    }
+                })
+                .then(response => response.json()) // parse response as JSON
+                .then(data => {
+                    debugout = document.getElementById("responsetext");
+                    debugout.innerHTML = JSON.stringify(data, "<br/>", 1);
+                })
+                .catch(function (error) {
+                    console.log(`Error: ${error.message}`);
+                });
+            };
+        getFromApi();
+    </script>
+</head>
+
+<body>
+    <h1>ReaControl24 OSC Client monitor</h1>
+    <form>
+        <input type="button" onclick="getFromApi()" value="Get State" />
+        <pre id="responsetext"></pre>
+
+    </form>
+
+
+</body>
+
+</html>

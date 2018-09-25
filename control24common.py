@@ -40,7 +40,8 @@ DEFAULTS = {
     'loglevel':logging.INFO,
     'interface':'en0',
     'scribble':'/track/c24scribstrip/name',
-    'logdir':'./logs',
+    'logdir':'/tmp',
+    'httpd':8888,
     'logformat':'%(asctime)s\t%(name)s\t%(levelname)s\t' +
                 '%(threadName)s\t%(funcName)s\t%(lineno)d\t%(message)s'
 }
